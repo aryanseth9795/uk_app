@@ -1,30 +1,37 @@
 {
   "expo": {
-    "name": "App",
-    "slug": "App",
+    "name": "UK Cosmetics & Gift Center",
+    "slug": "uk-ecom",
+    "scheme": "ukcosmetics",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#6F56BF"
     },
-    "ios": {
-      "supportsTablet": true
-    },
+
+    "updates": { "enabled": true },
+    "assetBundlePatterns": ["**/*"],
+
+    "ios": { "supportsTablet": false },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#6F56BF",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [],
+      "package": "com.aryanseth9795.ukecom"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+
+    "extra": {
+      "eas": { "projectId": "b70345c5-868e-4dce-901a-fd05810ec451" }
+    },
+    "owner": "aryanseth9795"
   }
 }
+
