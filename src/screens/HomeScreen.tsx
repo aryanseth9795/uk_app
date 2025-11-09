@@ -259,7 +259,6 @@
 //   );
 // }
 
-
 // src/screens/HomeScreen.tsx
 // import React, { useEffect, useMemo, useState, useCallback } from 'react';
 // import { View, ScrollView, RefreshControl, ActivityIndicator, Text, Pressable } from 'react-native';
@@ -433,7 +432,6 @@
 //     </SafeScreen>
 //   );
 // }
-
 
 // import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 // import {
@@ -654,9 +652,14 @@
 //   );
 // }
 
-
 // src/screens/HomeScreen.tsx
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import {
   View,
   ScrollView,
@@ -665,28 +668,29 @@ import {
   Text,
   Pressable,
   Keyboard,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-import SafeScreen from '@components/SafeScreen';
-import AppHeader from '@components/AppHeader';
-import ProductGrid from '@components/ProductGrid';
+import SafeScreen from "@components/SafeScreen";
+import AppHeader from "@components/AppHeader";
+import ProductGrid from "@components/ProductGrid";
 
-import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { fetchCatalog } from '@store/slices/catalogSlice';
-import { addToCart } from '@store/slices/cartSlice';
+import { useAppDispatch, useAppSelector } from "@store/hooks";
+// import { fetchCatalog } from '@store/slices/catalogSlice';
+import { fetchProducts } from "@store/slices/catalogSlice";
+import { addToCart } from "@store/slices/cartSlice";
 import {
   fetchSearchSuggestions,
   searchProducts,
   clearSuggestions,
   clearResults,
-} from '@store/slices/searchSlice';
-import PromoBanner from '@/components/PromoCarousel';
-import CategoryChips from '@/components/CategoryChips';
-import PromoCarousel from '@/components/PromoCarousel';
+} from "@store/slices/searchSlice";
+// import PromoBanner from "@/components/PromoCarousel";
+import CategoryChips from "@/components/CategoryChips";
+import PromoCarousel from "@/components/PromoCarousel";
 
 const asINR = (v: number) =>
-  `Rs ${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  `Rs ${Number(v || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
@@ -695,11 +699,12 @@ export default function HomeScreen() {
   // Catalog
   const catalog = useAppSelector((s: any) => s?.catalog);
   const catItems = Array.isArray(catalog?.items) ? catalog.items : [];
-  const catStatus: 'idle' | 'loading' | 'succeeded' | 'failed' = catalog?.status ?? 'idle';
+  const catStatus: "idle" | "loading" | "succeeded" | "failed" =
+    catalog?.status ?? "idle";
   const catError: string | undefined = catalog?.error;
 
   // Typing value
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   // Active selected query (chip in SearchBar)
   const [activeQuery, setActiveQuery] = useState<string | null>(null);
@@ -707,14 +712,19 @@ export default function HomeScreen() {
   // Suggestions & results
   const suggest = useAppSelector((s: any) => s?.search?.suggest);
   const result = useAppSelector((s: any) => s?.search?.results);
-  const suggestItems: string[] = Array.isArray(suggest?.items) ? suggest.items : [];
-  const suggestLoading = suggest?.status === 'loading';
+  const suggestItems: string[] = Array.isArray(suggest?.items)
+    ? suggest.items
+    : [];
+  const suggestLoading = suggest?.status === "loading";
   const resultItems = Array.isArray(result?.items) ? result.items : [];
-const [cat, setCat] = useState<string | null>(null);
+  const [cat, setCat] = useState<string | null>(null);
 
   // Load catalog
   useEffect(() => {
-    if (catStatus === 'idle') dispatch(fetchCatalog());
+    if (catStatus === "idle") {dispatch(fetchProducts())
+      // console.log("Fetching products for catalog");
+    }
+  
   }, [catStatus, dispatch]);
 
   // Debounced suggestions while typing only (no overlay when a label is active)
@@ -752,18 +762,18 @@ const [cat, setCat] = useState<string | null>(null);
     const q = query.trim();
     if (!q) return;
     Keyboard.dismiss();
-    setQuery('');                // clear input
+    setQuery(""); // clear input
     dispatch(clearSuggestions()); // hide overlay
-    runSearchOnce(q);            // runs once & sets activeQuery
+    runSearchOnce(q); // runs once & sets activeQuery
   }, [query, dispatch, runSearchOnce]);
 
   // Pick suggestion
   const onPickSuggestion = useCallback(
     (label: string) => {
       Keyboard.dismiss();
-      setQuery('');                 // clear input
+      setQuery(""); // clear input
       dispatch(clearSuggestions()); // hide overlay
-      runSearchOnce(label);         // runs once & sets activeQuery
+      runSearchOnce(label); // runs once & sets activeQuery
     },
     [dispatch, runSearchOnce]
   );
@@ -771,7 +781,7 @@ const [cat, setCat] = useState<string | null>(null);
   // Clear chip + results
   const clearSearch = useCallback(() => {
     setActiveQuery(null);
-    setQuery('');
+    setQuery("");
     dispatch(clearResults());
     dispatch(clearSuggestions());
   }, [dispatch]);
@@ -781,7 +791,7 @@ const [cat, setCat] = useState<string | null>(null);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await dispatch(fetchCatalog()).unwrap();
+      await dispatch(fetchProducts()).unwrap();
     } finally {
       setRefreshing(false);
     }
@@ -793,47 +803,49 @@ const [cat, setCat] = useState<string | null>(null);
     () =>
       (showingResults ? resultItems : catItems).map((p: any) => ({
         id: String(p.id),
-        title: String(p.title ?? ''),
-        price: asINR(p.price),
-        image: String(p.image ?? ''),
+        title: String(p.title ?? ""),
+        price: Number(p.price ?? 0), // ← numbers
+        mrp: Number(p.mrp ?? p.price ?? 0),
+        image: String(p.image ?? ""),
       })),
     [showingResults, resultItems, catItems]
   );
-  
-const SLIDES = [
-  {
-    id: "s1",
-    title: "Winter Glow Sale",
-    subtitle: "Up to 40% off on skincare & perfumes",
-    ctaText: "Shop now",
-    imageUrl:
-      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=1000",
-    onPress: () => console.log("Go to Winter Glow"),
-  },
-  {
-    id: "s2",
-    title: "New: Luxe Fragrances",
-    subtitle: "Handpicked for festive gifting",
-    ctaText: "Explore",
-    imageUrl:
-      "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000",
-    onPress: () => console.log("Go to Fragrances"),
-  },
-  {
-    id: "s3",
-    title: "Skincare Starter Kits",
-    subtitle: "Derm-approved routines for beginners",
-    ctaText: "Build your kit",
-    imageUrl:
-      "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=1000",
-    onPress: () => console.log("Go to Kits"),
-  },
-];
 
+  const SLIDES = [
+    {
+      id: "s1",
+      title: "Winter Glow Sale",
+      subtitle: "Up to 40% off on skincare & perfumes",
+      ctaText: "Shop now",
+      imageUrl:
+        "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=1000",
+      onPress: () => console.log("Go to Winter Glow"),
+    },
+    {
+      id: "s2",
+      title: "New: Luxe Fragrances",
+      subtitle: "Handpicked for festive gifting",
+      ctaText: "Explore",
+      imageUrl:
+        "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000",
+      onPress: () => console.log("Go to Fragrances"),
+    },
+    {
+      id: "s3",
+      title: "Skincare Starter Kits",
+      subtitle: "Derm-approved routines for beginners",
+      ctaText: "Build your kit",
+      imageUrl:
+        "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=1000",
+      onPress: () => console.log("Go to Kits"),
+    },
+  ];
 
+  console.log("HomeScreen rendered with cat:", cat);
+  console.log("HomeScreen rendered with gridData:", gridData);
 
   return (
-    <SafeScreen edges={['left', 'right']}>
+    <SafeScreen edges={["left", "right"]}>
       {/* Header layer (overlay above grid) */}
       <View style={{ zIndex: 100, elevation: 100 }}>
         <AppHeader
@@ -852,41 +864,43 @@ const SLIDES = [
         style={{ zIndex: 0 }}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Optional: you can keep/remove this status strip */}
         {showingResults && activeQuery && (
           <View
             style={{
-              backgroundColor: '#EEF2FF',
-              borderColor: '#C7D2FE',
+              backgroundColor: "#EEF2FF",
+              borderColor: "#C7D2FE",
               borderWidth: 1,
               padding: 10,
               borderRadius: 10,
               marginBottom: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
+              flexDirection: "row",
+              alignItems: "center",
               gap: 8,
             }}
           >
-            <Text style={{ color: '#3730A3', fontWeight: '700', flex: 1 }}>
+            <Text style={{ color: "#3730A3", fontWeight: "700", flex: 1 }}>
               Showing results for “{activeQuery}”
             </Text>
             <Pressable onPress={clearSearch}>
-              <Text style={{ color: '#6F56BF', fontWeight: '800' }}>Clear</Text>
+              <Text style={{ color: "#6F56BF", fontWeight: "800" }}>Clear</Text>
             </Pressable>
           </View>
         )}
         <View style={{ marginBottom: 16 }}>
           <CategoryChips selected={cat} onSelect={setCat} />
         </View>
- <View style={{ marginBottom: 16 }}>
+        <View style={{ marginBottom: 16 }}>
           <PromoCarousel slides={SLIDES} />
         </View>
         <ProductGrid
           data={gridData}
           onAdd={(id) => dispatch(addToCart({ id }))}
-          onPressItem={(id) => navigation.navigate('ProductDetail', { id })}
+          onPressItem={(id) => navigation.navigate("ProductDetail", { id })}
         />
       </ScrollView>
     </SafeScreen>

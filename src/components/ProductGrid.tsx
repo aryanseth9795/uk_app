@@ -37,12 +37,48 @@
 //     </View>
 //   );
 // }
- import React from 'react';
+//  import React from 'react';
+// import { View } from 'react-native';
+// import { FlashList } from '@shopify/flash-list';
+// import ProductCard from './ProductCard';
+
+// type Item = { id: string; title: string; price: string; image: string };
+// type Props = {
+//   data: Item[];
+//   onAdd: (id: string) => void;
+//   onPressItem?: (id: string) => void;
+// };
+
+// export default function ProductGrid({ data, onAdd, onPressItem }: Props) {
+//   return (
+//     <View style={{ flex: 1 }}>
+//       <FlashList
+//         data={data}
+//         keyExtractor={(i) => i.id}
+//         numColumns={2}
+//         scrollEnabled={false}
+//         renderItem={({ item }) => (
+//           <View style={{ flex: 1, padding: 8 }}>
+//             <ProductCard
+//               title={item.title}
+//               price={item.price}
+//               image={item.image}
+//               onAdd={() => onAdd(item.id)}
+//               onPress={onPressItem ? () => onPressItem(item.id) : undefined}
+//             />
+//           </View>
+//         )}
+//         contentContainerStyle={{ paddingBottom: 8 }}
+//       />
+//     </View>
+//   );
+// }
+import React from 'react';
 import { View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import ProductCard from './ProductCard';
 
-type Item = { id: string; title: string; price: string; image: string };
+type Item = { id: string; title: string; price: number; mrp: number; image: string };
 type Props = {
   data: Item[];
   onAdd: (id: string) => void;
@@ -58,17 +94,18 @@ export default function ProductGrid({ data, onAdd, onPressItem }: Props) {
         numColumns={2}
         scrollEnabled={false}
         renderItem={({ item }) => (
-          <View style={{ flex: 1, padding: 8 }}>
+          <View style={{ flex: 1, padding: 6 }}>
             <ProductCard
               title={item.title}
               price={item.price}
+              mrp={item.mrp}
               image={item.image}
               onAdd={() => onAdd(item.id)}
               onPress={onPressItem ? () => onPressItem(item.id) : undefined}
             />
           </View>
         )}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        contentContainerStyle={{ paddingBottom: 6 }}
       />
     </View>
   );

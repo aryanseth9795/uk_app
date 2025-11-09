@@ -6,18 +6,20 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#6F56BF"
     },
-
-    "updates": { "enabled": true },
-    "assetBundlePatterns": ["**/*"],
-
-    "ios": { "supportsTablet": false },
-
+    "updates": {
+      "enabled": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -27,11 +29,14 @@
       "permissions": [],
       "package": "com.aryanseth9795.ukecom"
     },
-
     "extra": {
-      "eas": { "projectId": "b70345c5-868e-4dce-901a-fd05810ec451" }
+      "eas": {
+        "projectId": "b70345c5-868e-4dce-901a-fd05810ec451"
+      }
     },
-    "owner": "aryanseth9795"
+    "owner": "aryanseth9795",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
-

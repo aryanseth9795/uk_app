@@ -430,8 +430,8 @@ export default function AppHeader({
   const value = searchValue ?? internal;
   const setValue = onSearchChange ?? setInternal;
 
-  const FLOAT_OFFSET = 4;
-  const SEARCH_HEIGHT = 4;
+  const FLOAT_OFFSET = 40;
+  const SEARCH_HEIGHT = 10;
 
   // Overlay colors (visible on white)
   const OVERLAY_BG = '#F5F3FF';     // violet-50
@@ -451,7 +451,7 @@ export default function AppHeader({
     <View style={{ position: 'relative', zIndex: 100, elevation: 100 }}>
       <LinearGradient colors={[colors.headerStart, colors.headerEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
         <SafeAreaView edges={['top', 'left', 'right']}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 56 }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 20 }}>
             <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.3, lineHeight: 30 }}>
               {title}
             </Text>

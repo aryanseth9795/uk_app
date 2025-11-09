@@ -1,5 +1,5 @@
 // src/screens/ProductDetailScreen.tsx
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -192,9 +192,9 @@ export default function ProductDetailScreen() {
 
   // Main UI
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['left', 'right']}>
       {/* Keep the same purple header without search */}
-      <AppHeader title={String(data?.name ?? data?.title ?? 'Product')} subtitle="" showSearch={false} />
+      <AppHeader title={"UK Cosmetics & Gifts"} subtitle="" showSearch={true} />
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 24 }}
