@@ -10,7 +10,8 @@ import { loadTokens, saveTokens, clearTokens } from "@services/tokenStorage";
 import type { RefreshTokenResponse } from "./types";
 
 // Get base URL from environment
-const API_BASE_URL ="http://192.168.1.6:5000/api/v1/user";
+// const API_BASE_URL ="http://192.168.1.6:5000/api/v1/user";
+const API_BASE_URL ="https://urs-backend.onrender.com/api/v1/user";
 
 // Create Axios instance
 export const apiClient: AxiosInstance = axios.create({

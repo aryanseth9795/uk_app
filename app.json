@@ -22,12 +22,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#6F56BF",
-        "monochromeImage": "./assets/adaptive-icon-monochrome.png"
+        "monochromeImage": "./assets/icon.png"
       },
       "permissions": [],
-      "package": "com.aryanseth9795.ukecom"
+      "package": "com.aryanseth9795.urshop"
     },
     "extra": {
       "eas": {
