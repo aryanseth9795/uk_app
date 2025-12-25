@@ -100,7 +100,7 @@ export default function HomeScreen() {
         title: String(p.name || ""),
         price: price / 100,
         mrp: mrp / 100,
-        image: String(p.thumbnail?.url || ""),
+        image: String(p.thumbnail?.secure_url || p.thumbnail?.url || ""),
       };
     });
   }, [searchData]);
@@ -373,7 +373,9 @@ export default function HomeScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(p.thumbnail?.url || ""),
+                image: String(
+                  p.thumbnail?.secure_url || p.thumbnail?.url || ""
+                ),
               };
             })}
             onPressMore={handleMorePress}

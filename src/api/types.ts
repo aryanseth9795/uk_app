@@ -120,6 +120,7 @@ export type DeleteAddressResponse = {
 
 export type ProductImage = {
   url: string;
+  secure_url: string;
   publicId: string;
 };
 

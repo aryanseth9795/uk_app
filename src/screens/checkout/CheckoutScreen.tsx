@@ -71,7 +71,10 @@ const OrderItem = ({
     <View style={styles.orderItem}>
       <Image
         source={{
-          uri: product.thumbnail?.url || "https://via.placeholder.com/60",
+          uri:
+            product.thumbnail?.secure_url ||
+            product.thumbnail?.url ||
+            "https://via.placeholder.com/60",
         }}
         style={styles.orderItemImage}
       />

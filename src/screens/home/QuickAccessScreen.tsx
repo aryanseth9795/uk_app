@@ -114,7 +114,9 @@ export default function QuickAccessScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(p.thumbnail?.url || ""),
+                image: String(
+                  p.thumbnail?.secure_url || p.thumbnail?.url || ""
+                ),
               };
             })}
             onPressMore={handleMorePress}

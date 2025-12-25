@@ -338,7 +338,7 @@ function Tabs() {
         headerShown: false,
         tabBarActiveTintColor: "#8366CC",
         tabBarStyle: {
-          height: 48 + insets.bottom,
+          height: 48 + insets.bottom+15,
           paddingBottom: Math.max(12, insets.bottom),
           paddingTop: 4,
         },

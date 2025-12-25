@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "UR Shop",
-    "slug": "urshop",
+    "slug": "uk-ecom",
     "scheme": "urshop",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,9 +14,7 @@
     "updates": {
       "enabled": true
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false
     },
@@ -35,8 +33,6 @@
       }
     },
     "owner": "aryanseth9795",
-    "plugins": [
-      "expo-secure-store"
-    ]
+    "plugins": ["expo-secure-store"]
   }
 }

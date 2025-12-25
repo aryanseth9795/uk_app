@@ -184,8 +184,7 @@ export default function AllOrdersScreen() {
           <OrderCard
             order={item}
             onPress={() => {
-              console.log("[AllOrdersScreen] Navigating with order:", item);
-              console.log("[AllOrdersScreen] Order ID:", item._id);
+             
               navigation.navigate("OrderDetail", { order: item });
             }}
           />

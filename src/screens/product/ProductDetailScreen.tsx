@@ -213,7 +213,7 @@ export default function ProductDetailScreen() {
   }
 
   return (
-    <SafeScreen edges={["top", "left", "right","bottom"]}>
+    <SafeScreen edges={["top", "left", "right", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -464,7 +464,10 @@ export default function ProductDetailScreen() {
                         style={styles.similarImageWrapper}
                       >
                         <Image
-                          source={{ uri: item.thumbnail.url }}
+                          source={{
+                            uri:
+                              item.thumbnail.secure_url || item.thumbnail.url,
+                          }}
                           style={styles.similarImage}
                           resizeMode="cover"
                         />

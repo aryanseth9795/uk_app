@@ -86,7 +86,10 @@ const CartItem = ({
       {/* Product Image - Smaller */}
       <Image
         source={{
-          uri: product.thumbnail?.url || "https://via.placeholder.com/100",
+          uri:
+            product.thumbnail?.secure_url ||
+            product.thumbnail?.url ||
+            "https://via.placeholder.com/100",
         }}
         style={styles.itemImage}
       />

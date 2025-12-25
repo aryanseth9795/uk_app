@@ -79,7 +79,7 @@ export default function SearchResultsScreen() {
         title: String(p.name || ""),
         price: price,
         mrp: mrp,
-        image: String(p.thumbnail?.url || ""),
+        image: String(p.thumbnail?.secure_url || p.thumbnail?.url || ""),
         searchScore: p.searchScore || 0,
       };
 
@@ -115,7 +115,7 @@ export default function SearchResultsScreen() {
   // Loading State
   if (isLoading) {
     return (
-      <SafeScreen edges={["top", "left", "right","bottom"]}>
+      <SafeScreen edges={["top", "left", "right", "bottom"]}>
         {renderHeader()}
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#8366CC" />
@@ -128,7 +128,7 @@ export default function SearchResultsScreen() {
   // Error State
   if (error) {
     return (
-      <SafeScreen edges={["top", "left", "right","bottom"]}>
+      <SafeScreen edges={["top", "left", "right", "bottom"]}>
         {renderHeader()}
         <View style={styles.centerContainer}>
           <Text style={styles.errorTitle}>Search Failed</Text>
@@ -150,7 +150,7 @@ export default function SearchResultsScreen() {
   const totalResults = mainProducts.length + suggestionProducts.length;
 
   return (
-    <SafeScreen edges={["top", "left", "right","bottom"]}>
+    <SafeScreen edges={["top", "left", "right", "bottom"]}>
       {renderHeader()}
       <View style={styles.resultsInfo}>
         <Text style={styles.resultsCount}>

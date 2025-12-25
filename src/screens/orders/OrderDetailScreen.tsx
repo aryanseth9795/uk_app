@@ -153,7 +153,7 @@ export default function OrderDetailScreen() {
   };
 
   return (
-    <SafeScreen edges={["bottom","top"]}>
+    <SafeScreen edges={["bottom", "top"]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -209,7 +209,11 @@ export default function OrderDetailScreen() {
           {order.products?.map((product: any, index: number) => (
             <View key={index} style={styles.productCard}>
               <Image
-                source={{ uri: product.productId?.thumbnail?.url }}
+                source={{
+                  uri:
+                    product.productId?.thumbnail?.secure_url ||
+                    product.productId?.thumbnail?.url,
+                }}
                 style={styles.productImage}
                 contentFit="cover"
               />
