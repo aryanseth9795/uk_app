@@ -18,14 +18,13 @@ import type {
 export const useLandingProducts = (
   options?: Omit<UseQueryOptions<LandingPageResponse>, "queryKey" | "queryFn">
 ) => {
-  console.log("useLandingProducts");
   return useQuery({
     queryKey: ["products", "landing"],
     queryFn: async (): Promise<LandingPageResponse> => {
       const response = await apiClient.get<LandingPageResponse>(
         "/products/landing"
       );
-      // console.log("useLandingProducts response", response.data);
+
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - landing page products don't change often
@@ -58,7 +57,7 @@ export const useFilteredLandingProducts = (
           },
         }
       );
-      console.log(`[useFilteredLandingProducts] ${filterType}:`, response.data);
+
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

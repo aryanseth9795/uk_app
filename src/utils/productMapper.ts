@@ -46,14 +46,14 @@ function pickMrpRupees(x: any): number {
 
 function pickImageUrl(x: any): string {
   const t = x?.thumbnail;
-  if (t?.secure_url) return String(t.secure_url);
+  if (t?.secureUrl) return String(t.secureUrl);
   const firstImg =
     Array.isArray(x?.images) && x.images.length > 0 ? x.images[0] : null;
-  if (firstImg?.secure_url) return String(firstImg.secure_url);
+  if (firstImg?.secureUrl) return String(firstImg.secureUrl);
   if (x?.image_url) return String(x.image_url);
   if (x?.image) return String(x.image);
-  if (x?.thumbnail?.secure_url) return String(x.thumbnail.secure_url);
-  if (x?.thumbnail?.url) return String(x.thumbnail.secure_url); // Changed .url to .secure_url
+  if (x?.thumbnail?.secureUrl) return String(x.thumbnail.secureUrl);
+  if (x?.thumbnail?.url) return String(x.thumbnail.secureUrl); // Changed .url to .secureUrl
   return "";
 }
 

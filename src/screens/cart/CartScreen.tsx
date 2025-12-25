@@ -75,19 +75,13 @@ const CartItem = ({
   const pricePerUnit = priceCalc.pricePerUnit;
   const itemTotal = priceCalc.total;
 
-  console.log(`[CartItem] Product: ${product.name}, Qty: ${qty}`);
-  console.log(`[CartItem] SellingPrices:`, variant.sellingPrices);
-  console.log(
-    `[CartItem] Calculated - PricePerUnit: ${pricePerUnit}, ItemTotal: ${itemTotal}`
-  );
-
   return (
     <View style={styles.itemContainer}>
       {/* Product Image - Smaller */}
       <Image
         source={{
           uri:
-            product.thumbnail?.secure_url ||
+            product.thumbnail?.secureUrl ||
             product.thumbnail?.url ||
             "https://via.placeholder.com/100",
         }}

@@ -115,7 +115,7 @@ export default function QuickAccessScreen() {
                 price: price,
                 mrp: mrp,
                 image: String(
-                  p.thumbnail?.secure_url || p.thumbnail?.url || ""
+                  p.thumbnail?.secureUrl || p.thumbnail?.url || ""
                 ),
               };
             })}

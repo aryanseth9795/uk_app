@@ -67,25 +67,6 @@ export default function ProductDetailScreen() {
     enabled: !!product?.categoryId,
   });
 
-  // Debug similar products
-  React.useEffect(() => {
-    console.log("[ProductDetail] Similar products:", {
-      categoryId: product?.categoryId,
-      productId,
-      hasData: !!similarData,
-      productsCount: similarData?.products?.length || 0,
-      isLoading: similarLoading,
-      isError: similarError,
-      rawResponse: similarData, // Full API response
-    });
-  }, [
-    similarData,
-    product?.categoryId,
-    productId,
-    similarLoading,
-    similarError,
-  ]);
-
   // Auto-select first variant on load
   React.useEffect(() => {
     if (product?.variants && product.variants.length > 0 && !selectedVariant) {
@@ -465,8 +446,7 @@ export default function ProductDetailScreen() {
                       >
                         <Image
                           source={{
-                            uri:
-                              item.thumbnail.secure_url || item.thumbnail.url,
+                            uri: item.thumbnail.secureUrl || item.thumbnail.url,
                           }}
                           style={styles.similarImage}
                           resizeMode="cover"

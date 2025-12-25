@@ -100,7 +100,7 @@ export default function HomeScreen() {
         title: String(p.name || ""),
         price: price / 100,
         mrp: mrp / 100,
-        image: String(p.thumbnail?.secure_url || p.thumbnail?.url || ""),
+        image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
       };
     });
   }, [searchData]);
@@ -173,7 +173,7 @@ export default function HomeScreen() {
         ctaText: "Shop now",
         imageUrl:
           "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=1000",
-        onPress: () => console.log("Go to Winter Glow"),
+        onPress: () => {},
       },
       {
         id: "s2",
@@ -182,7 +182,7 @@ export default function HomeScreen() {
         ctaText: "Explore",
         imageUrl:
           "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000",
-        onPress: () => console.log("Go to Fragrances"),
+        onPress: () => {},
       },
       {
         id: "s3",
@@ -191,7 +191,7 @@ export default function HomeScreen() {
         ctaText: "Build your kit",
         imageUrl:
           "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=1000",
-        onPress: () => console.log("Go to Kits"),
+        onPress: () => {},
       },
     ],
     []
@@ -353,7 +353,6 @@ export default function HomeScreen() {
 
         {/* Category Sections */}
         {landingData?.data?.map((category) => (
-          // {console.log("category", category)  }er
           <CategorySection
             key={category.categoryId}
             categoryId={category.categoryId}
@@ -373,9 +372,7 @@ export default function HomeScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(
-                  p.thumbnail?.secure_url || p.thumbnail?.url || ""
-                ),
+                image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
               };
             })}
             onPressMore={handleMorePress}

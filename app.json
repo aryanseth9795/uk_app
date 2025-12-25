@@ -14,7 +14,9 @@
     "updates": {
       "enabled": true
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false
     },
@@ -33,6 +35,9 @@
       }
     },
     "owner": "aryanseth9795",
-    "plugins": ["expo-secure-store"]
+    "plugins": [
+      "expo-secure-store",
+      "expo-font"
+    ]
   }
 }

@@ -79,10 +79,6 @@ export default function AccountScreen() {
   const userData = profileData?.user || user;
 
   // Debug logging
-  console.log("[AccountScreen] isAuthenticated:", isAuthenticated);
-  console.log("[AccountScreen] isLoading:", isLoading);
-  console.log("[AccountScreen] user:", !!user);
-  console.log("[AccountScreen] userData:", !!userData);
 
   // Unauthenticated state (check this FIRST for instant response)
   if (!isAuthenticated) {

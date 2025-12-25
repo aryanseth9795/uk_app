@@ -52,7 +52,6 @@ export const useOrderDetail = (
           orderId,
         }
       );
-      // console.log("[useOrderDetail] Response:", response.data);
       return response.data;
     },
     enabled: !!orderId,
@@ -72,7 +71,6 @@ export const useCreateOrder = () => {
     mutationFn: async (
       orderData: CreateOrderRequest
     ): Promise<CreateOrderResponse> => {
-      console.log("[useCreateOrder] orderData:", orderData);
       const response = await apiClient.post<CreateOrderResponse>(
         "/orders/create",
         orderData

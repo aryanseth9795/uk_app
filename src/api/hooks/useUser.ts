@@ -29,11 +29,9 @@ export const useUserProfile = (
   return useQuery({
     queryKey: ["user", "profile"],
     queryFn: async (): Promise<UserDetailsResponse> => {
-      console.log("Fetching user profile...");
       const response = await apiClient.get<UserDetailsResponse>(
         "/user/details"
       );
-      console.log("User profile fetched successfully", response.data);
       return response.data;
     },
     staleTime: Infinity, // Keep fresh until mutation - user profile rarely changes

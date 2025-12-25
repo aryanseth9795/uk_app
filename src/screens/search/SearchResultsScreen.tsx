@@ -41,29 +41,10 @@ export default function SearchResultsScreen() {
   // Search products
   const { data, isLoading, error } = useSearchProducts({ q: query });
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log("[SearchResults] Query:", query);
-    console.log("[SearchResults] Data exists:", !!data);
-    console.log("[SearchResults] Data.products exists:", !!data?.products);
-    console.log(
-      "[SearchResults] Data.products length:",
-      data?.products?.length
-    );
-    console.log("[SearchResults] Loading:", isLoading);
-    console.log("[SearchResults] Error:", error);
-  }, [query, data, isLoading, error]);
-
   const { mainProducts, suggestionProducts } = useMemo(() => {
-    console.log("[SearchResults] useMemo - data:", data);
-    console.log("[SearchResults] useMemo - data?.products:", data?.products);
-
     if (!data?.products) {
-      console.log("[SearchResults] No products - returning empty arrays");
       return { mainProducts: [], suggestionProducts: [] };
     }
-
-    console.log("[SearchResults] Processing", data.products.length, "products");
 
     const main: any[] = [];
     const suggestions: any[] = [];
@@ -79,7 +60,7 @@ export default function SearchResultsScreen() {
         title: String(p.name || ""),
         price: price,
         mrp: mrp,
-        image: String(p.thumbnail?.secure_url || p.thumbnail?.url || ""),
+        image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
         searchScore: p.searchScore || 0,
       };
 
@@ -90,9 +71,6 @@ export default function SearchResultsScreen() {
         suggestions.push(product);
       }
     });
-
-    console.log("[SearchResults] Main results:", main.length);
-    console.log("[SearchResults] Suggestions:", suggestions.length);
 
     return { mainProducts: main, suggestionProducts: suggestions };
   }, [data]);

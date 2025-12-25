@@ -55,22 +55,10 @@ export default function OrderDetailScreen() {
   const route = useRoute<any>();
   const { mutate: cancelOrder, isPending: isCanceling } = useCancelOrder();
 
-  // Get order ID from route params
-  console.log("[OrderDetailScreen] route.params:", route.params);
-  console.log(
-    "[OrderDetailScreen] Full order object:",
-    JSON.stringify(route.params?.order, null, 2)
-  );
   const orderId = route.params?.order?._id || route.params?.order?.orderId;
-  console.log("[OrderDetailScreen] orderId:", orderId);
 
   // Fetch order details from API
   const { data: orderData, isLoading, error } = useOrderDetail(orderId);
-  console.log("[OrderDetailScreen] Query state:", {
-    isLoading,
-    hasError: !!error,
-    hasData: !!orderData,
-  });
 
   // Use fetched order data
   const order = orderData?.order;
@@ -211,7 +199,7 @@ export default function OrderDetailScreen() {
               <Image
                 source={{
                   uri:
-                    product.productId?.thumbnail?.secure_url ||
+                    product.productId?.thumbnail?.secureUrl ||
                     product.productId?.thumbnail?.url,
                 }}
                 style={styles.productImage}

@@ -72,7 +72,7 @@ const OrderItem = ({
       <Image
         source={{
           uri:
-            product.thumbnail?.secure_url ||
+            product.thumbnail?.secureUrl ||
             product.thumbnail?.url ||
             "https://via.placeholder.com/60",
         }}
