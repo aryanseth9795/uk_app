@@ -74,46 +74,31 @@ export default function ProductDetailScreen() {
     }
   }, [product, selectedVariant]);
 
-  // Get unique colors and sizes
-  const colors = useMemo(() => {
-    if (!product) return [];
-    const uniqueColors = [
-      ...new Set(product.variants.map((v) => v.color).filter(Boolean)),
-    ];
-    return uniqueColors;
-  }, [product]);
+  // Handler for variant selection
+  const handleVariantSelect = (variant: ProductVariant) => {
+    setSelectedVariant(variant);
+    setSelectedImageIndex(0);
+  };
 
-  const sizes = useMemo(() => {
-    if (!product) return [];
-    const uniqueSizes = [
-      ...new Set(product.variants.map((v) => v.size).filter(Boolean)),
-    ];
-    return uniqueSizes;
-  }, [product]);
-
-  // Get variants matching selected color
-  const variantsMatchingColor = useMemo(() => {
-    if (!product || !selectedVariant?.color) return product?.variants || [];
-    return product.variants.filter((v) => v.color === selectedVariant.color);
-  }, [product, selectedVariant]);
+  // Debug logging
+  React.useEffect(() => {
+    if (product) {
+      console.log("📦 Product Detail Debug:");
+      console.log("Product ID:", productId);
+      console.log("Product Name:", product.name);
+      console.log("Total Variants:", product.variants?.length || 0);
+      console.log("Selected Variant:", selectedVariant);
+      if (product.variants && product.variants.length > 0) {
+        console.log("First Variant Sample:", {
+          color: product.variants[0].color,
+          size: product.variants[0].size,
+          _id: product.variants[0]._id,
+        });
+      }
+    }
+  }, [product, selectedVariant, productId]);
 
   // Handlers
-  const handleColorSelect = (color: string) => {
-    const variant = product?.variants.find((v) => v.color === color);
-    if (variant) {
-      setSelectedVariant(variant);
-      setSelectedImageIndex(0);
-    }
-  };
-
-  const handleSizeSelect = (size: string) => {
-    const variant = variantsMatchingColor.find((v) => v.size === size);
-    if (variant) {
-      setSelectedVariant(variant);
-      setSelectedImageIndex(0);
-    }
-  };
-
   const handleAddToCart = () => {
     if (!selectedVariant || !product) return;
 
@@ -156,7 +141,10 @@ export default function ProductDetailScreen() {
   const variantImages = useMemo(() => {
     if (!selectedVariant?.images || selectedVariant.images.length === 0) {
       return [
-        { url: "https://via.placeholder.com/400", publicId: "placeholder" },
+        {
+          secureUrl: "https://via.placeholder.com/400",
+          publicId: "placeholder",
+        },
       ];
     }
     return selectedVariant.images;
@@ -224,7 +212,7 @@ export default function ProductDetailScreen() {
               }}
               renderItem={({ item }) => (
                 <Image
-                  source={{ uri: item.url }}
+                  source={{ uri: item.secureUrl }}
                   style={styles.productImage}
                   resizeMode="cover"
                 />
@@ -301,66 +289,48 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
-          {/* Color Selection */}
-          {colors.length > 0 && (
+          {/* Variant Selection */}
+          {product.variants && product.variants.length > 1 && (
             <View style={styles.variantSection}>
-              <Text style={styles.variantLabel}>Color</Text>
+              <Text style={styles.variantLabel}>
+                Select Variant ({product.variants.length} available)
+              </Text>
               <View style={styles.variantOptions}>
-                {colors.map((color) => (
-                  <Pressable
-                    key={color}
-                    onPress={() => handleColorSelect(color!)}
-                    style={[
-                      styles.variantPill,
-                      selectedVariant?.color === color &&
-                        styles.variantPillSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.variantPillText,
-                        selectedVariant?.color === color &&
-                          styles.variantPillTextSelected,
-                      ]}
-                    >
-                      {color}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
+                {product.variants.map((variant, index) => {
+                  // Generate label from measurement data
+                  let displayLabel = "";
 
-          {/* Size Selection */}
-          {sizes.length > 0 && (
-            <View style={styles.variantSection}>
-              <Text style={styles.variantLabel}>Size</Text>
-              <View style={styles.variantOptions}>
-                {sizes.map((size) => {
-                  const isAvailable = variantsMatchingColor.some(
-                    (v) => v.size === size
-                  );
+                  if (variant.measurement?.value && variant.measurement?.unit) {
+                    displayLabel = `${variant.measurement.value}${variant.measurement.unit}`;
+                  } else if (variant.packOf && variant.packOf > 1) {
+                    displayLabel = `Pack of ${variant.packOf}`;
+                  } else if (variant.color || variant.size) {
+                    const parts = [];
+                    if (variant.color) parts.push(variant.color);
+                    if (variant.size) parts.push(variant.size);
+                    displayLabel = parts.join(" - ");
+                  } else {
+                    displayLabel = `Variant ${index + 1}`;
+                  }
+
                   return (
                     <Pressable
-                      key={size}
-                      onPress={() => isAvailable && handleSizeSelect(size!)}
+                      key={variant._id}
+                      onPress={() => handleVariantSelect(variant)}
                       style={[
                         styles.variantPill,
-                        selectedVariant?.size === size &&
+                        selectedVariant?._id === variant._id &&
                           styles.variantPillSelected,
-                        !isAvailable && styles.variantPillDisabled,
                       ]}
-                      disabled={!isAvailable}
                     >
                       <Text
                         style={[
                           styles.variantPillText,
-                          selectedVariant?.size === size &&
+                          selectedVariant?._id === variant._id &&
                             styles.variantPillTextSelected,
-                          !isAvailable && styles.variantPillTextDisabled,
                         ]}
                       >
-                        {size}
+                        {displayLabel}
                       </Text>
                     </Pressable>
                   );

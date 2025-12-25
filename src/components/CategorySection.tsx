@@ -12,7 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import ProductCard from "./ProductCard";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const CARD_WIDTH = SCREEN_WIDTH * 0.42;
+const CARD_WIDTH = SCREEN_WIDTH * 0.4; // Smaller to show more of next card
+const CARD_SPACING = 16;
 
 type Product = {
   id: string;
@@ -62,14 +63,15 @@ function CategorySection({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={CARD_WIDTH + 12}
+        snapToInterval={CARD_WIDTH + CARD_SPACING}
+        snapToAlignment="start"
       >
-        {products.map((product) => (
+        {products.map((product, index) => (
           <View
             key={product.id}
             style={{
               width: CARD_WIDTH,
-              marginRight: 12,
+              marginRight: index === products.length - 1 ? 16 : CARD_SPACING,
               height: 260,
               padding: 3,
             }}
@@ -115,6 +117,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingLeft: 16,
+    paddingRight: 80, // Extra padding to show partial cards on right
     marginTop: 4,
   },
 });

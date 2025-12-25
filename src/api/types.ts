@@ -139,6 +139,12 @@ export type ProductVariant = {
   sellingPrices: SellingPrice[];
   images?: ProductImage[];
   isActive: boolean;
+  measurement?: {
+    value: number;
+    unit: string;
+  };
+  packOf?: number;
+  expiry?: string | null;
 };
 
 export type Product = {

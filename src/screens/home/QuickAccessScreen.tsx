@@ -72,7 +72,7 @@ export default function QuickAccessScreen() {
   }
 
   return (
-    <SafeScreen>
+    <SafeScreen edges={["top", "left", "right", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{title}</Text>
@@ -114,9 +114,8 @@ export default function QuickAccessScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(
-                  p.thumbnail?.secureUrl || p.thumbnail?.url || ""
-                ),
+                image: String(p.thumbnail?.secureUrl  || ""),
+                variantCount: p.variants?.length || 0,
               };
             })}
             onPressMore={handleMorePress}

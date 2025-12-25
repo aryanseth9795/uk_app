@@ -255,7 +255,7 @@ export default function CartScreen() {
             Add some products to get started!
           </Text>
           <Pressable
-            onPress={() => navigation.navigate("Tabs")}
+            onPress={() => navigation.navigate("Home")}
             style={styles.shopButton}
           >
             <Text style={styles.shopButtonText}>Start Shopping</Text>

@@ -373,6 +373,7 @@ export default function HomeScreen() {
                 price: price,
                 mrp: mrp,
                 image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
+                variantCount: p.variants?.length || 0,
               };
             })}
             onPressMore={handleMorePress}

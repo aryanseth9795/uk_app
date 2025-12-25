@@ -62,6 +62,7 @@ export default function SearchResultsScreen() {
         mrp: mrp,
         image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
         searchScore: p.searchScore || 0,
+        variantCount: p.variants?.length || 0,
       };
 
       // Separate by search score

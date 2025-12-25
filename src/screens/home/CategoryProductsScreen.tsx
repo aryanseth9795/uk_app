@@ -131,6 +131,7 @@ export default function CategoryProductsScreen() {
         price: price,
         mrp: mrp,
         image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
+        variantCount: p.variants?.length || 0,
       };
     });
 
@@ -199,9 +200,8 @@ export default function CategoryProductsScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(
-                  p.thumbnail?.secureUrl || p.thumbnail?.url || ""
-                ),
+                image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
+                variantCount: p.variants?.length || 0,
               };
             });
 

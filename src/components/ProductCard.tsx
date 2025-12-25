@@ -9,6 +9,7 @@ type Props = {
   price: number; // selling price (rupees)
   mrp: number; // mrp (rupees)
   image: string;
+  variantCount?: number; // total number of variants (optional)
 };
 
 const asINR = (v: number) =>
@@ -23,12 +24,12 @@ export default function ProductCard({
   onAdd: () => void;
   onPress?: () => void;
 }) {
- 
-
   const hasDiscount = data.mrp > data.price && data.mrp > 0;
   const discountPct = hasDiscount
     ? Math.max(0, Math.round(((data.mrp - data.price) / data.mrp) * 100))
     : 0;
+
+  const showVariantBadge = data.variantCount && data.variantCount > 1;
 
   const Card = (
     <View
@@ -47,6 +48,26 @@ export default function ProductCard({
         justifyContent: "space-between",
       }}
     >
+      {/* Variant Count Badge */}
+      {showVariantBadge && (
+        <View
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            backgroundColor: "rgba(131, 102, 204, 0.9)",
+            borderRadius: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            zIndex: 10,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>
+            {data.variantCount} Variants
+          </Text>
+        </View>
+      )}
+
       <Image
         source={data?.image}
         style={{
