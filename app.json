@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "UK Cosmetics & Gift Center",
-    "slug": "uk-ecom",
-    "scheme": "ukcosmetics",
+    "name": "UR Shop",
+    "slug": "urshop",
+    "scheme": "urshop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
