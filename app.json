@@ -14,9 +14,7 @@
     "updates": {
       "enabled": true
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false
     },
@@ -26,7 +24,7 @@
         "backgroundColor": "#6F56BF",
         "monochromeImage": "./assets/icon.png"
       },
-      "permissions": [],
+      "permissions": ["android.permission.POST_NOTIFICATIONS"],
       "package": "com.aryanseth9795.urshop"
     },
     "extra": {
@@ -35,9 +33,6 @@
       }
     },
     "owner": "aryanseth9795",
-    "plugins": [
-      "expo-secure-store",
-      "expo-font"
-    ]
+    "plugins": ["expo-secure-store", "expo-font"]
   }
 }

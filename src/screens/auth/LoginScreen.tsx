@@ -18,6 +18,8 @@ import SafeScreen from "@components/SafeScreen";
 import { useLogin } from "@api/hooks/useAuth";
 import { useAppDispatch } from "@store/hooks";
 import { setUser } from "@store/slices/authSlice";
+import { useRegisterExpoToken } from "@api/hooks/useNotifications";
+import { registerForPushNotifications } from "@services/notificationService";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -30,6 +32,7 @@ export default function LoginScreen() {
   );
 
   const { mutate: login, isPending: isLoading } = useLogin();
+  const registerTokenMutation = useRegisterExpoToken();
 
   const validateForm = () => {
     const newErrors: { mobile?: string; password?: string } = {};
@@ -63,7 +66,7 @@ export default function LoginScreen() {
         password: password,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
           // Store user in Redux
           dispatch(
             setUser({
@@ -76,6 +79,14 @@ export default function LoginScreen() {
               updatedAt: "",
             })
           );
+
+          // Register for push notifications
+          try {
+            await registerForPushNotifications(registerTokenMutation);
+          } catch (error) {
+            console.error("Failed to register push notifications:", error);
+            // Don't block login if notification registration fails
+          }
 
           Alert.alert("Success", "Login successful!", [
             {

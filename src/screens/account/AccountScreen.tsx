@@ -16,6 +16,8 @@ import { logout } from "@store/slices/authSlice";
 import { clearPrimaryAddressId } from "@store/slices/addressSlice";
 import { useUserProfile } from "@api/hooks/useUser";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRemoveExpoToken } from "@api/hooks/useNotifications";
+import { unregisterPushNotifications } from "@services/notificationService";
 
 // Get initials from name
 const getInitials = (name: string): string => {
@@ -76,6 +78,8 @@ export default function AccountScreen() {
     enabled: isAuthenticated,
   });
 
+  const removeTokenMutation = useRemoveExpoToken();
+
   const userData = profileData?.user || user;
 
   // Debug logging
@@ -116,7 +120,15 @@ export default function AccountScreen() {
   const initials = getInitials(userData?.name || "");
   const joinedDate = formatJoinedDate(userData?.createdAt || "");
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Unregister push notifications before logging out
+    try {
+      await unregisterPushNotifications(removeTokenMutation);
+    } catch (error) {
+      console.error("Failed to unregister push notifications:", error);
+      // Don't block logout if notification unregistration fails
+    }
+
     dispatch(logout());
     dispatch(clearPrimaryAddressId()); // Clear primary address on logout
     navigation.navigate("Tabs");
