@@ -1,5 +1,10 @@
 // Product Hooks using TanStack Query
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+} from "@tanstack/react-query";
 import apiClient, { getErrorMessage } from "../client";
 import type {
   LandingPageResponse,
@@ -9,6 +14,7 @@ import type {
   SearchProductsResponse,
   SearchSuggestionsResponse,
   SearchFilters,
+  MixedProductsResponse,
 } from "../types";
 
 // ===================================
@@ -201,6 +207,40 @@ export const useSearchSuggestions = (
     },
     enabled: query.length >= 2, // Only search if query has at least 2 characters
     staleTime: 30 * 1000, // 30 seconds - suggestions can be very fresh
+    ...options,
+  });
+};
+
+// ===================================
+// MIXED PRODUCTS (Infinite Scroll)
+// ===================================
+
+export const useMixedProducts = (
+  limit: number = 20,
+  options?: Omit<
+    UseInfiniteQueryOptions<MixedProductsResponse>,
+    "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
+  >
+) => {
+  return useInfiniteQuery({
+    queryKey: ["products", "mixed", limit],
+    queryFn: async ({ pageParam = 1 }): Promise<MixedProductsResponse> => {
+      const response = await apiClient.get<MixedProductsResponse>(
+        "/products/mixed",
+        {
+          params: {
+            page: pageParam,
+            limit,
+          },
+        }
+      );
+      return response.data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasNextPage ? lastPage.page + 1 : undefined;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
     ...options,
   });
 };

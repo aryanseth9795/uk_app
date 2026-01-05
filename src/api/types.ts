@@ -293,6 +293,21 @@ export type SearchSuggestionsResponse = {
 };
 
 // ===================================
+// MIXED PRODUCTS (Infinite Scroll)
+// ===================================
+
+export type MixedProductsResponse = {
+  success: true;
+  page: number;
+  limit: number;
+  totalProducts: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  data: Product[];
+};
+
+// ===================================
 // ORDER TYPES
 // ===================================
 

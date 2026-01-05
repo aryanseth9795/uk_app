@@ -9,8 +9,10 @@ import {
   Pressable,
   Keyboard,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { FlashList } from "@shopify/flash-list";
 
 // Components
 import SafeScreen from "@components/SafeScreen";
@@ -18,6 +20,7 @@ import AppHeader from "@components/AppHeader";
 import QuickAccessCard from "@components/QuickAccessCard";
 import CategorySection from "@components/CategorySection";
 import PromoCarousel from "@components/PromoCarousel";
+import ProductCard from "@components/ProductCard";
 
 // Hooks
 import { useAppDispatch } from "@store/hooks";
@@ -26,9 +29,11 @@ import {
   useLandingProducts,
   useSearchProducts,
   useSearchSuggestions,
+  useMixedProducts,
 } from "@api/hooks";
-import type { SearchFilters } from "@api/types";
+import type { SearchFilters, MixedProductsResponse } from "@api/types";
 import { getPriceForQuantity } from "@utils/pricing";
+import type { InfiniteData } from "@tanstack/react-query";
 
 // ===================================
 // HOME SCREEN COMPONENT
@@ -53,6 +58,17 @@ export default function HomeScreen() {
     error: landingError,
     refetch: refetchLanding,
   } = useLandingProducts();
+
+  // Mixed products for infinite scroll
+  const {
+    data: mixedData,
+    isLoading: mixedLoading,
+    error: mixedError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchMixed,
+  } = useMixedProducts(20);
 
   // Search results
   const searchFilters: SearchFilters = useMemo(
@@ -131,9 +147,39 @@ export default function HomeScreen() {
     setQuery("");
   }, []);
 
+  // Flatten mixed products from pages
+  const flatMixedProducts = useMemo(() => {
+    const pages = (mixedData as InfiniteData<MixedProductsResponse> | undefined)
+      ?.pages;
+    if (!pages) return [];
+    return pages.flatMap((page: MixedProductsResponse) =>
+      page.data.map((p: any) => {
+        const firstVariant = p.variants?.[0];
+        const price = getPriceForQuantity(firstVariant?.sellingPrices || [], 1);
+        const mrp = firstVariant?.mrp || price;
+
+        return {
+          id: String(p._id),
+          variantId: String(firstVariant?._id || ""),
+          title: String(p.name || ""),
+          price: price,
+          mrp: mrp,
+          image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
+          variantCount: p.variants?.length || 0,
+        };
+      })
+    );
+  }, [mixedData]);
+
   const onRefresh = useCallback(async () => {
-    await refetchLanding();
-  }, [refetchLanding]);
+    await Promise.all([refetchLanding(), refetchMixed()]);
+  }, [refetchLanding, refetchMixed]);
+
+  const onLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleQuickAccess = useCallback(
     (type: string) => {
@@ -216,7 +262,12 @@ export default function HomeScreen() {
         />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Failed to load products</Text>
-          <Pressable onPress={refetchLanding} style={styles.retryButton}>
+          <Pressable
+            onPress={() => {
+              refetchLanding();
+            }}
+            style={styles.retryButton}
+          >
             <Text style={styles.retryText}>Retry</Text>
           </Pressable>
         </View>
@@ -281,32 +332,54 @@ export default function HomeScreen() {
   }
 
   // ===================================
-  // RENDER NORMAL HOME SCREEN
+  // RENDER PRODUCT ITEM (2-column grid)
   // ===================================
 
-  return (
-    <SafeScreen edges={["left", "right"]}>
-      {/* Header */}
-      <AppHeader
-        searchValue={query}
-        onSearchChange={setQuery}
-        onSearchSubmit={doSearch}
-        activeLabel={activeQuery}
-        onClearActive={clearSearch}
-        suggestions={suggestions}
-        suggestionsLoading={suggestionsLoading}
-        onSelectSuggestion={onPickSuggestion}
-      />
+  const renderProductItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => {
+      // Create 2-column layout
+      const isLeftColumn = index % 2 === 0;
+      return (
+        <View
+          style={[
+            styles.productItemContainer,
+            isLeftColumn ? styles.leftColumn : styles.rightColumn,
+          ]}
+        >
+          
+          <ProductCard
+            data={{
+              title: item.title,
+              price: item.price,
+              mrp: item.mrp,
+              image: item.image,
+              variantCount: item.variantCount,
+            }}
+            onAdd={() => {
+              dispatch(addToCart({ id: item.id, variantId: item.variantId }));
+              Alert.alert(
+                "Added to Cart",
+                `${item.title} has been added to your cart`,
+                [{ text: "OK" }]
+              );
+            }}
+            onPress={() =>
+              navigation.navigate("ProductDetail", { productId: item.id })
+            }
+          />
+        </View>
+      );
+    },
+    [dispatch, navigation]
+  );
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={landingLoading} onRefresh={onRefresh} />
-        }
-      >
-        {/* Heading */}
-        {/* <Text style={styles.heading}>Discover Amazing Deals</Text> */}
+  // ===================================
+  // RENDER LIST HEADER (Landing Data)
+  // ===================================
 
+  const renderListHeader = useCallback(() => {
+    return (
+      <View>
         {/* Promo Banner */}
         <View style={styles.bannerContainer}>
           <PromoCarousel slides={SLIDES} />
@@ -359,7 +432,6 @@ export default function HomeScreen() {
             categoryName={category.categoryName}
             products={category.products.map((p: any) => {
               const firstVariant = p.variants?.[0];
-              // Use quantity 1 for display pricing - prices are in rupees
               const price = getPriceForQuantity(
                 firstVariant?.sellingPrices || [],
                 1
@@ -368,7 +440,7 @@ export default function HomeScreen() {
 
               return {
                 id: String(p._id),
-                variantId: String(firstVariant?._id || ""), // Include variant ID
+                variantId: String(firstVariant?._id || ""),
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
@@ -380,19 +452,98 @@ export default function HomeScreen() {
             onPressProduct={(id) =>
               navigation.navigate("ProductDetail", { productId: id })
             }
-            onAddToCart={(id, variantId) =>
-              dispatch(addToCart({ id, variantId }))
-            }
+            onAddToCart={(id, variantId) => {
+              const product = category.products.find(
+                (p: any) => String(p._id) === id
+              );
+              dispatch(addToCart({ id, variantId }));
+              if (product) {
+                Alert.alert(
+                  "Added to Cart",
+                  `${product.name} has been added to your cart`,
+                  [{ text: "OK" }]
+                );
+              }
+            }}
           />
         ))}
 
-        {/* Empty State */}
-        {!landingLoading && !landingData?.data?.length && (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No products available</Text>
+ <View style={styles.bannerContainer}>
+          <PromoCarousel slides={SLIDES} />
+        </View>
+        {/* Section Title for Mixed Products */}
+        {flatMixedProducts.length > 0 && (
+          <View style={styles.sectionTitleContainer}>
+            <Text style={styles.sectionTitle}>Discover More Products</Text>
           </View>
         )}
-      </ScrollView>
+      </View>
+    );
+  }, [
+    SLIDES,
+    landingLoading,
+    landingData,
+    handleQuickAccess,
+    handleMorePress,
+    flatMixedProducts.length,
+    dispatch,
+    navigation,
+  ]);
+
+  // ===================================
+  // RENDER LIST FOOTER (Loading)
+  // ===================================
+
+  const renderListFooter = useCallback(() => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.footerLoading}>
+        <ActivityIndicator size="small" color="#8366CC" />
+      </View>
+    );
+  }, [isFetchingNextPage]);
+
+  // ===================================
+  // RENDER NORMAL HOME SCREEN
+  // ===================================
+
+  return (
+    <SafeScreen edges={["left", "right"]}>
+      {/* Header */}
+      <AppHeader
+        searchValue={query}
+        onSearchChange={setQuery}
+        onSearchSubmit={doSearch}
+        activeLabel={activeQuery}
+        onClearActive={clearSearch}
+        suggestions={suggestions}
+        suggestionsLoading={suggestionsLoading}
+        onSelectSuggestion={onPickSuggestion}
+      />
+
+      <FlashList
+        data={flatMixedProducts}
+        renderItem={renderProductItem}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
+        numColumns={2}
+        ListHeaderComponent={renderListHeader}
+        ListFooterComponent={renderListFooter}
+        onEndReached={onLoadMore}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={landingLoading && !landingData}
+            onRefresh={onRefresh}
+          />
+        }
+        ListEmptyComponent={
+          !landingLoading && !mixedLoading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No products available</Text>
+            </View>
+          ) : null
+        }
+      />
     </SafeScreen>
   );
 }
@@ -488,5 +639,32 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: "#F9FAFB",
     borderRadius: 8,
+  },
+  // FlashList product grid styles
+  productItemContainer: {
+    flex: 1,
+    paddingVertical: 6,
+  },
+  leftColumn: {
+    paddingLeft: 16,
+    paddingRight: 6,
+  },
+  rightColumn: {
+    paddingLeft: 6,
+    paddingRight: 16,
+  },
+  sectionTitleContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1F2937",
+  },
+  footerLoading: {
+    paddingVertical: 20,
+    alignItems: "center",
   },
 });

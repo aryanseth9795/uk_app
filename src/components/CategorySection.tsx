@@ -90,14 +90,15 @@ function CategorySection({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 15,
+    marginBottom: 1,
     padding: 0,
+ 
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 22,
+    // marginBottom: 22,
     paddingHorizontal: 16,
   },
   title: {
@@ -117,8 +118,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingLeft: 16,
-    paddingRight: 80, // Extra padding to show partial cards on right
-    marginTop: 4,
+    paddingRight: 80, 
+    marginTop: 1,
   },
 });
 

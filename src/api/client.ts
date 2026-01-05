@@ -11,7 +11,7 @@ import type { RefreshTokenResponse } from "./types";
 
 // Get base URL from environment
 // const API_BASE_URL ="http://192.168.1.6:5000/api/v1/user";
-export const API_BASE_URL ="https://urs-backend.onrender.com/api/v1/user";
+export const API_BASE_URL ="https://u-r-s-backend-node.onrender.com/api/v1/user";
 
 // Create Axios instance
 export const apiClient: AxiosInstance = axios.create({

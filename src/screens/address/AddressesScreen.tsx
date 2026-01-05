@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Switch,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,9 +31,19 @@ const AddressCard = ({
   onTogglePrimary: (isPrimary: boolean) => void;
 }) => {
   return (
-    <View style={styles.addressCard}>
+    <Pressable
+      onPress={() => onTogglePrimary(!isPrimary)}
+      style={[styles.addressCard, isPrimary && styles.addressCardSelected]}
+    >
       <View style={styles.addressHeader}>
         <View style={styles.addressTitleRow}>
+          <Pressable onPress={() => onTogglePrimary(!isPrimary)}>
+            <Ionicons
+              name={isPrimary ? "radio-button-on" : "radio-button-off"}
+              size={22}
+              color={isPrimary ? "#8366CC" : "#9CA3AF"}
+            />
+          </Pressable>
           <Ionicons name="location" size={18} color="#8366CC" />
           <Text style={styles.addressLabel}>{address.label}</Text>
           {isPrimary && (
@@ -64,18 +73,7 @@ const AddressCard = ({
           {address.City} - {address.pincode}
         </Text>
       </View>
-
-      {/* Primary Address Switch */}
-      <View style={styles.primarySwitchRow}>
-        <Text style={styles.primarySwitchLabel}>Set as Primary Address</Text>
-        <Switch
-          value={isPrimary}
-          onValueChange={onTogglePrimary}
-          trackColor={{ false: "#D1D5DB", true: "#C4B5FD" }}
-          thumbColor={isPrimary ? "#8366CC" : "#F3F4F6"}
-        />
-      </View>
-    </View>
+    </Pressable>
   );
 };
 
@@ -314,6 +312,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     gap: 12,
+  },
+  addressCardSelected: {
+    borderColor: "#8366CC",
+    borderWidth: 2,
+    backgroundColor: "#F5F3FF",
   },
   addressHeader: {
     flexDirection: "row",

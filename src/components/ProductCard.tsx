@@ -1,15 +1,15 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@theme/color";
 
 type Props = {
   title: string;
-  price: number; // selling price (rupees)
-  mrp: number; // mrp (rupees)
+  price: number;
+  mrp: number;
   image: string;
-  variantCount?: number; // total number of variants (optional)
+  variantCount?: number;
 };
 
 const asINR = (v: number) =>
@@ -28,114 +28,167 @@ export default function ProductCard({
   const discountPct = hasDiscount
     ? Math.max(0, Math.round(((data.mrp - data.price) / data.mrp) * 100))
     : 0;
-
   const showVariantBadge = data.variantCount && data.variantCount > 1;
 
-  const Card = (
-    <View
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: 14,
-        padding: 12,
-        gap: 6,
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 6,
-        height: 250,
-        alignContent: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      {/* Variant Count Badge */}
-      {showVariantBadge && (
-        <View
-          style={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-            backgroundColor: "rgba(131, 102, 204, 0.9)",
-            borderRadius: 6,
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            zIndex: 10,
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>
-            {data.variantCount} Variants
-          </Text>
+  const CardContent = (
+    <View style={styles.card}>
+      {/* Image Section */}
+      <View style={styles.imageWrapper}>
+        <Image
+          source={data?.image}
+          style={styles.image}
+          contentFit="cover"
+          transition={100}
+        />
+
+        {/* Badges Row */}
+        <View style={styles.badgeRow}>
+          {showVariantBadge && (
+            <View style={styles.variantBadge}>
+              <Text style={styles.badgeText}>{data.variantCount} Options</Text>
+            </View>
+          )}
+          {hasDiscount && discountPct >= 5 && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.badgeText}>{discountPct}% OFF</Text>
+            </View>
+          )}
         </View>
-      )}
-
-      <Image
-        source={data?.image}
-        style={{
-          width: "100%",
-          aspectRatio: 1,
-          borderRadius: 12,
-          backgroundColor: "#FAFAFA",
-        }}
-        contentFit="cover"
-        transition={120}
-      />
-
-      <Text numberOfLines={2} style={{ fontSize: 13 }}>
-        {data.title}
-      </Text>
-
-      {/* Price row like Flipkart: Selling • MRP (struck) • % off */}
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-        <Text style={{ fontSize: 16, fontWeight: "900" }}>
-          {asINR(data.price)}
-        </Text>
-
-        {hasDiscount && (
-          <>
-            <Text
-              style={{ color: "#6B7280", textDecorationLine: "line-through" }}
-            >
-              {asINR(data.mrp)}
-            </Text>
-            <Text style={{ color: "#16a34a", fontWeight: "800" }}>
-              {discountPct}% off
-            </Text>
-          </>
-        )}
       </View>
 
-      <View style={{ display: "flex", flexDirection: "row" }}>
+      {/* Content Section */}
+      <View style={styles.content}>
+        {/* Brand/Title */}
+        <Text numberOfLines={2} style={styles.title}>
+          {data.title}
+        </Text>
+
+        {/* Price Section */}
+        <View style={styles.priceSection}>
+          <Text style={styles.price}>{asINR(data.price)}</Text>
+          {hasDiscount && <Text style={styles.mrp}>{asINR(data.mrp)}</Text>}
+        </View>
+
+        {/* Add Button */}
         <Pressable
           onPress={onAdd}
-          style={{
-            width: "95%",
-            height: 32,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: "#eee",
-
-            backgroundColor: "#fff",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-evenly",
-            paddingHorizontal: 4,
-            maxWidth: "95%",
-          }}
+          style={({ pressed }) => [
+            styles.addBtn,
+            pressed && styles.addBtnPressed,
+          ]}
         >
-          <Text>Add To Cart</Text>
-
-          <Ionicons name="cart-outline" size={18} color={colors.tint} />
+          <Ionicons name="add" size={16} color="#fff" />
+          <Text style={styles.addBtnText}>ADD TO CART</Text>
         </Pressable>
       </View>
     </View>
   );
 
   return onPress ? (
-    <Pressable onPress={onPress} android_ripple={{ color: "#E5E7EB" }}>
-      {Card}
+    <Pressable onPress={onPress} style={styles.wrapper}>
+      {CardContent}
     </Pressable>
   ) : (
-    Card
+    CardContent
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    // alignItems: "center",
+    justifyContent: "center",
+    // height: 200,
+  },
+  card: {
+    // height: 220,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  imageWrapper: {
+    width: "100%",
+    height: 110,
+    backgroundColor: "#F8F8F8",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  badgeRow: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    right: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  variantBadge: {
+    backgroundColor: "rgba(131, 102, 204, 0.9)",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  discountBadge: {
+    backgroundColor: "#EF4444",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 8,
+    fontWeight: "700",
+  },
+  content: {
+    padding: 8,
+    gap: 4,
+  },
+  title: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#1F2937",
+    lineHeight: 20,
+    height: 20,
+  },
+  priceSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  price: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#1F2937",
+  },
+  mrp: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    textDecorationLine: "line-through",
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    backgroundColor: "#8366CC",
+    borderRadius: 6,
+    paddingVertical: 6,
+    marginTop: 2,
+  },
+  addBtnPressed: {
+    backgroundColor: "#6B4FAD",
+  },
+  addBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#fff",
+  },
+});

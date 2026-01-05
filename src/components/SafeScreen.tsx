@@ -1,6 +1,7 @@
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ViewStyle, StatusBar } from "react-native";
+import { colors } from "@theme/color";
 
 type Props = {
   children: React.ReactNode;
@@ -14,8 +15,11 @@ export default function SafeScreen({
   edges = ["top", "left", "right"],
 }: Props) {
   return (
-    <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView
+      style={[{ flex: 1, backgroundColor: colors.bg }, style]}
+      edges={edges}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       {children}
     </SafeAreaView>
   );
