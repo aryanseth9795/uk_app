@@ -168,7 +168,6 @@ export const useSearchProducts = (
           params: filters,
         }
       );
-      console.log("useSearchProducts response", response.data);
       return response.data;
     },
     enabled: !!(

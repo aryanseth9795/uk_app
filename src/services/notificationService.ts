@@ -3,6 +3,7 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import type { UseMutationResult } from "@tanstack/react-query";
 
 /**
  * Set up the notification handler to configure how notifications are displayed
@@ -13,6 +14,8 @@ export const setupNotificationHandler = () => {
       shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
 };
@@ -42,7 +45,6 @@ export const getExpoPushToken = async (): Promise<string | null> => {
   try {
     // Check if running on a physical device
     if (!Device.isDevice) {
-      console.warn("Push notifications only work on physical devices");
       return null;
     }
 
@@ -57,7 +59,6 @@ export const getExpoPushToken = async (): Promise<string | null> => {
     }
 
     if (finalStatus !== "granted") {
-      console.warn("Notification permission not granted");
       return null;
     }
 
@@ -65,7 +66,6 @@ export const getExpoPushToken = async (): Promise<string | null> => {
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
     if (!projectId) {
-      console.error("Expo project ID not found in app.json");
       return null;
     }
 
@@ -76,7 +76,6 @@ export const getExpoPushToken = async (): Promise<string | null> => {
     const token = tokenData.data;
 
     if (!isValidExpoPushToken(token)) {
-      console.error("Invalid Expo push token format:", token);
       return null;
     }
 
@@ -85,7 +84,6 @@ export const getExpoPushToken = async (): Promise<string | null> => {
 
     return token;
   } catch (error) {
-    console.error("Error getting expo push token:", error);
     return null;
   }
 };
@@ -95,7 +93,7 @@ export const getExpoPushToken = async (): Promise<string | null> => {
  * This function should be called after successful login
  */
 export const registerForPushNotifications = async (
-  registerTokenMutation: any
+  registerTokenMutation: UseMutationResult<any, Error, any, unknown>
 ): Promise<boolean> => {
   try {
     const token = await getExpoPushToken();
@@ -114,10 +112,8 @@ export const registerForPushNotifications = async (
       deviceId,
     });
 
-    console.log("Push notifications registered successfully");
     return true;
   } catch (error) {
-    console.error("Failed to register push notifications:", error);
     return false;
   }
 };
@@ -127,13 +123,12 @@ export const registerForPushNotifications = async (
  * This function should be called on logout
  */
 export const unregisterPushNotifications = async (
-  removeTokenMutation: any
+  removeTokenMutation: UseMutationResult<any, Error, any, unknown>
 ): Promise<boolean> => {
   try {
     const token = await AsyncStorage.getItem("expoToken");
 
     if (!token) {
-      console.log("No expo token found to remove");
       return true;
     }
 
@@ -145,10 +140,8 @@ export const unregisterPushNotifications = async (
     // Remove token from local storage
     await AsyncStorage.removeItem("expoToken");
 
-    console.log("Push notifications unregistered successfully");
     return true;
   } catch (error) {
-    console.error("Failed to unregister push notifications:", error);
     return false;
   }
 };

@@ -91,7 +91,11 @@ export default function LoginScreen() {
           Alert.alert("Success", "Login successful!", [
             {
               text: "OK",
-              onPress: () => navigation.navigate("Tabs"),
+              onPress: () =>
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Tabs" }],
+                }),
             },
           ]);
         },

@@ -142,6 +142,7 @@ export type ProductVariant = {
   measurement?: {
     value: number;
     unit: string;
+    label?: string;
   };
   packOf?: number;
   expiry?: string | null;
@@ -245,7 +246,7 @@ export type CategoryInfo = {
 
 export type SearchProduct = Product & {
   categoryInfo?: CategoryInfo;
-  searchScore?: number;
+  score?: number;
 };
 
 export type SearchProductsResponse = {

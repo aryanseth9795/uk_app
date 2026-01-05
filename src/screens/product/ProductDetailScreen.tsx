@@ -80,24 +80,6 @@ export default function ProductDetailScreen() {
     setSelectedImageIndex(0);
   };
 
-  // Debug logging
-  React.useEffect(() => {
-    if (product) {
-      console.log("📦 Product Detail Debug:");
-      console.log("Product ID:", productId);
-      console.log("Product Name:", product.name);
-      console.log("Total Variants:", product.variants?.length || 0);
-      console.log("Selected Variant:", selectedVariant);
-      if (product.variants && product.variants.length > 0) {
-        console.log("First Variant Sample:", {
-          color: product.variants[0].color,
-          size: product.variants[0].size,
-          _id: product.variants[0]._id,
-        });
-      }
-    }
-  }, [product, selectedVariant, productId]);
-
   // Handlers
   const handleAddToCart = () => {
     if (!selectedVariant || !product) return;
@@ -300,17 +282,22 @@ export default function ProductDetailScreen() {
                   // Generate label from measurement data
                   let displayLabel = "";
 
-                  if (variant.measurement?.value && variant.measurement?.unit) {
-                    displayLabel = `${variant.measurement.value}${variant.measurement.unit}`;
-                  } else if (variant.packOf && variant.packOf > 1) {
-                    displayLabel = `Pack of ${variant.packOf}`;
-                  } else if (variant.color || variant.size) {
-                    const parts = [];
-                    if (variant.color) parts.push(variant.color);
-                    if (variant.size) parts.push(variant.size);
-                    displayLabel = parts.join(" - ");
-                  } else {
-                    displayLabel = `Variant ${index + 1}`;
+                  if (!variant?.measurement?.label) {
+                    if (
+                      variant.measurement?.value &&
+                      variant.measurement?.unit
+                    ) {
+                      displayLabel = `${variant.measurement.value}${variant.measurement.unit}`;
+                    } else if (variant.packOf && variant.packOf > 1) {
+                      displayLabel = `Pack of ${variant.packOf}`;
+                    } else if (variant.color || variant.size) {
+                      const parts = [];
+                      if (variant.color) parts.push(variant.color);
+                      if (variant.size) parts.push(variant.size);
+                      displayLabel = parts.join(" - ");
+                    } else {
+                      displayLabel = `Variant ${index + 1}`;
+                    }
                   }
 
                   return (
@@ -330,7 +317,9 @@ export default function ProductDetailScreen() {
                             styles.variantPillTextSelected,
                         ]}
                       >
-                        {displayLabel}
+                        {variant?.measurement?.label
+                          ? variant?.measurement?.label
+                          : displayLabel}
                       </Text>
                     </Pressable>
                   );

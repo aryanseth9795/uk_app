@@ -22,17 +22,19 @@ import {
   calculateItemTotal,
 } from "@utils/pricing";
 
-// Cart Item Component - Compact Version
+// Cart Item Component - Compact Version with Stock Validation
 const CartItem = ({
   id,
   variantId,
   qty,
   onTotalsCalculated,
+  onStockInfo,
 }: {
   id: string;
   variantId: string;
   qty: number;
   onTotalsCalculated?: (mrpTotal: number, sellingTotal: number) => void;
+  onStockInfo?: (key: string, stock: number, qty: number) => void;
 }) => {
   const dispatch = useAppDispatch();
   const { data: productData, isLoading } = useProductDetail(id);
@@ -42,8 +44,10 @@ const CartItem = ({
 
   // Use ref to store callback to avoid infinite loop
   const callbackRef = useRef(onTotalsCalculated);
+  const stockCallbackRef = useRef(onStockInfo);
   // Update totals callback
   callbackRef.current = onTotalsCalculated;
+  stockCallbackRef.current = onStockInfo;
 
   // Calculate and report totals when data changes
   useEffect(() => {
@@ -56,7 +60,12 @@ const CartItem = ({
       // Only report selling total, no MRP
       callbackRef.current(priceCalc.total, priceCalc.total);
     }
-  }, [variant, qty]); // Only depend on variant and qty, not the callback
+    // Report stock info
+    if (variant && stockCallbackRef.current) {
+      const key = `${id}-${variantId}`;
+      stockCallbackRef.current(key, variant.stock, qty);
+    }
+  }, [variant, qty, id, variantId]); // Only depend on variant and qty, not the callback
 
   if (isLoading) {
     return (
@@ -70,13 +79,52 @@ const CartItem = ({
     return null;
   }
 
+  // Stock status checks
+  const isOutOfStock = variant.stock === 0;
+  const isInsufficientStock = variant.stock < qty;
+  const isLimitedStock = variant.stock > 0 && variant.stock <= 2;
+
   // Use quantity-based pricing
   const priceCalc = calculateItemTotal(variant.sellingPrices, qty, variant.mrp);
   const pricePerUnit = priceCalc.pricePerUnit;
   const itemTotal = priceCalc.total;
 
   return (
-    <View style={styles.itemContainer}>
+    <View
+      style={[
+        styles.itemContainer,
+        isOutOfStock && styles.itemContainerOutOfStock,
+        isInsufficientStock && !isOutOfStock && styles.itemContainerWarning,
+      ]}
+    >
+      {/* Out of Stock Badge */}
+      {isOutOfStock && (
+        <View style={styles.outOfStockBadge}>
+          <Ionicons name="alert-circle" size={12} color="#fff" />
+          <Text style={styles.outOfStockBadgeText}>OUT OF STOCK</Text>
+        </View>
+      )}
+
+      {/* Insufficient Stock Badge */}
+      {isInsufficientStock && !isOutOfStock && (
+        <View style={styles.insufficientStockBadge}>
+          <Ionicons name="warning" size={12} color="#fff" />
+          <Text style={styles.insufficientStockBadgeText}>
+            Only {variant.stock} left!
+          </Text>
+        </View>
+      )}
+
+      {/* Limited Stock Badge (stock <= 2 but > 0) */}
+      {isLimitedStock && !isInsufficientStock && (
+        <View style={styles.limitedStockBadge}>
+          <Ionicons name="flash" size={12} color="#fff" />
+          <Text style={styles.limitedStockBadgeText}>
+            Limited Stock! Hurry up! 🔥
+          </Text>
+        </View>
+      )}
+
       {/* Product Image - Smaller */}
       <Image
         source={{
@@ -85,12 +133,15 @@ const CartItem = ({
             product.thumbnail?.url ||
             "https://via.placeholder.com/100",
         }}
-        style={styles.itemImage}
+        style={[styles.itemImage, isOutOfStock && styles.itemImageOutOfStock]}
       />
 
       {/* Product Details */}
       <View style={styles.itemDetails}>
-        <Text style={styles.itemName} numberOfLines={1}>
+        <Text
+          style={[styles.itemName, isOutOfStock && styles.itemNameOutOfStock]}
+          numberOfLines={1}
+        >
           {product.name}
         </Text>
 
@@ -104,7 +155,11 @@ const CartItem = ({
         )}
 
         {/* Price - Only Selling Price */}
-        <Text style={styles.itemPrice}>₹{pricePerUnit.toFixed(0)}</Text>
+        <Text
+          style={[styles.itemPrice, isOutOfStock && styles.itemPriceOutOfStock]}
+        >
+          ₹{pricePerUnit.toFixed(0)}
+        </Text>
 
         {/* Quantity Controls - Compact */}
         <View style={styles.qtyControls}>
@@ -129,12 +184,29 @@ const CartItem = ({
 
           <Pressable
             onPress={() => dispatch(updateQty({ id, variantId, qty: qty + 1 }))}
-            style={styles.qtyButton}
+            style={[
+              styles.qtyButton,
+              (isOutOfStock || isInsufficientStock) && styles.qtyButtonDisabled,
+            ]}
+            disabled={isOutOfStock || isInsufficientStock}
           >
-            <Ionicons name="add" size={14} color="#6B7280" />
+            <Ionicons
+              name="add"
+              size={14}
+              color={
+                isOutOfStock || isInsufficientStock ? "#D1D5DB" : "#6B7280"
+              }
+            />
           </Pressable>
 
-          <Text style={styles.itemSubtotal}>₹{itemTotal.toFixed(0)}</Text>
+          <Text
+            style={[
+              styles.itemSubtotal,
+              isOutOfStock && styles.itemSubtotalOutOfStock,
+            ]}
+          >
+            ₹{itemTotal.toFixed(0)}
+          </Text>
         </View>
       </View>
 
@@ -168,6 +240,25 @@ export default function CartScreen() {
     itemCount: 0,
   });
 
+  // Stock tracking for checkout validation
+  const stockInfoRef = useRef<Record<string, { stock: number; qty: number }>>(
+    {}
+  );
+  const [hasStockIssues, setHasStockIssues] = React.useState(false);
+
+  // Handle stock info callback
+  const handleStockInfo = React.useCallback(
+    (key: string, stock: number, qty: number) => {
+      stockInfoRef.current[key] = { stock, qty };
+      // Check if any item has stock issues
+      const issues = Object.values(stockInfoRef.current).some(
+        (item) => item.stock === 0 || item.stock < item.qty
+      );
+      setHasStockIssues(issues);
+    },
+    []
+  );
+
   // Get primary address or fallback to first address
   const displayAddress = React.useMemo(() => {
     if (!user?.addresses || user.addresses.length === 0) return null;
@@ -196,15 +287,32 @@ export default function CartScreen() {
       itemCount: cartItems.reduce((sum, item) => sum + item.qty, 0),
     };
 
-    console.log("[Cart] Final Totals:", finalTotals);
-    console.log("[Cart] Item Totals Breakdown:", itemTotalsRef.current);
-
     setTotals(finalTotals);
   };
+
+  // Reset totals when cart is cleared
+  React.useEffect(() => {
+    if (cartItems.length === 0) {
+      itemTotalsRef.current = {};
+      stockInfoRef.current = {};
+      setTotals({ sellingTotal: 0, itemCount: 0 });
+      setHasStockIssues(false);
+    }
+  }, [cartItems.length]);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
       navigation.navigate("Login");
+      return;
+    }
+
+    // Check for stock issues
+    if (hasStockIssues) {
+      Alert.alert(
+        "Stock Issues",
+        "Some items in your cart are out of stock or have insufficient quantity. Please update your cart before proceeding.",
+        [{ text: "OK" }]
+      );
       return;
     }
 
@@ -357,6 +465,7 @@ export default function CartScreen() {
                 itemTotalsRef.current[key] = { mrp, selling };
                 recalculateTotals();
               }}
+              onStockInfo={handleStockInfo}
             />
           );
         })}
@@ -377,7 +486,7 @@ export default function CartScreen() {
 
       {/* Fixed Footer - Only Grand Total and Checkout */}
       <View style={styles.footer}>
-        <View style={styles.divider} />
+     
 
         {/* Grand Total - Fixed at bottom */}
         <View style={styles.grandTotalRow}>
@@ -546,6 +655,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     gap: 10,
+    // paddingVertical:50
+    marginVertical: 2.5,
   },
   itemImage: {
     width: 60,
@@ -625,7 +736,8 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   footer: {
-    padding: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
@@ -666,16 +778,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#059669",
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginVertical: 6,
-  },
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 6,
+    // paddingVertical: 1,
   },
   grandTotalLabel: {
     fontSize: 16,
@@ -730,5 +837,86 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  // Stock validation styles
+  itemContainerOutOfStock: {
+    borderColor: "#EF4444",
+    borderWidth: 2,
+    backgroundColor: "#FEF2F2",
+  },
+  itemContainerWarning: {
+    borderColor: "#F59E0B",
+    borderWidth: 2,
+    backgroundColor: "#FFFBEB",
+  },
+  outOfStockBadge: {
+    position: "absolute",
+    top: -8,
+    left: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  outOfStockBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  insufficientStockBadge: {
+    position: "absolute",
+    top: -8,
+    left: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#F59E0B",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  insufficientStockBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  limitedStockBadge: {
+    position: "absolute",
+    top: -8,
+    left: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#10B981",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  limitedStockBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  itemImageOutOfStock: {
+    opacity: 0.5,
+  },
+  itemNameOutOfStock: {
+    color: "#9CA3AF",
+    textDecorationLine: "line-through",
+  },
+  itemPriceOutOfStock: {
+    color: "#9CA3AF",
+  },
+  itemSubtotalOutOfStock: {
+    color: "#9CA3AF",
+  },
+  qtyButtonDisabled: {
+    opacity: 0.4,
   },
 });

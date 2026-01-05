@@ -57,7 +57,7 @@ export const useRegisterExpoToken = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      console.log("Expo token registered successfully:", data);
+      // Token registered successfully
     },
     onError: (error) => {
       console.error("Failed to register expo token:", getErrorMessage(error));
@@ -78,7 +78,7 @@ export const useRemoveExpoToken = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      console.log("Expo token removed successfully:", data);
+      // Token removed successfully
     },
     onError: (error) => {
       console.error("Failed to remove expo token:", getErrorMessage(error));

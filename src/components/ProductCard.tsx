@@ -48,11 +48,11 @@ export default function ProductCard({
               <Text style={styles.badgeText}>{data.variantCount} Options</Text>
             </View>
           )}
-          {hasDiscount && discountPct >= 5 && (
+          {/* {hasDiscount && discountPct >= 5 && (
             <View style={styles.discountBadge}>
               <Text style={styles.badgeText}>{discountPct}% OFF</Text>
             </View>
-          )}
+          )} */}
         </View>
       </View>
 
@@ -66,7 +66,14 @@ export default function ProductCard({
         {/* Price Section */}
         <View style={styles.priceSection}>
           <Text style={styles.price}>{asINR(data.price)}</Text>
-          {hasDiscount && <Text style={styles.mrp}>{asINR(data.mrp)}</Text>}
+          {hasDiscount && (
+            <>
+              <Text style={styles.mrp}>{asINR(data.mrp)}</Text>
+              <View style={styles.pctBadge}>
+                <Text style={styles.pctText}>{discountPct}%</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Add Button */}
@@ -115,8 +122,10 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: "100%",
-    height: 110,
+    height: 145,
     backgroundColor: "#F8F8F8",
+    objectFit: "contain",
+    padding: 3,
   },
   image: {
     width: "100%",
@@ -133,8 +142,8 @@ const styles = StyleSheet.create({
   variantBadge: {
     backgroundColor: "rgba(131, 102, 204, 0.9)",
     borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   discountBadge: {
     backgroundColor: "#EF4444",
@@ -144,7 +153,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: "#fff",
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: "700",
   },
   content: {
@@ -164,14 +173,25 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   price: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "900",
     color: "#1F2937",
   },
   mrp: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#9CA3AF",
     textDecorationLine: "line-through",
+  },
+  pctBadge: {
+    backgroundColor: "#EF4444",
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  pctText: {
+    fontSize: 8,
+    fontWeight: "700",
+    color: "#fff",
   },
   addBtn: {
     flexDirection: "row",

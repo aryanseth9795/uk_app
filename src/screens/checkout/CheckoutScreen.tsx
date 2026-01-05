@@ -252,6 +252,35 @@ export default function CheckoutScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* COD & Delivery Info Banner */}
+        <View style={styles.infoBanner}>
+          <View style={styles.infoBannerRow}>
+            <View style={styles.infoBannerIcon}>
+              <Ionicons name="cash-outline" size={24} color="#fff" />
+            </View>
+            <View style={styles.infoBannerContent}>
+              <Text style={styles.infoBannerTitle}>Cash on Delivery Only</Text>
+              <Text style={styles.infoBannerSubtitle}>
+                We currently accept only Cash on Delivery orders
+              </Text>
+            </View>
+          </View>
+          <View style={styles.infoBannerDivider} />
+          <View style={styles.infoBannerRow}>
+            <View
+              style={[styles.infoBannerIcon, { backgroundColor: "#8366CC" }]}
+            >
+              <Ionicons name="time-outline" size={24} color="#fff" />
+            </View>
+            <View style={styles.infoBannerContent}>
+              <Text style={styles.infoBannerTitle}>Delivery Time</Text>
+              <Text style={styles.infoBannerSubtitle}>
+                Orders are delivered within 24-48 hours from order placement
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* Delivery Address */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -588,5 +617,46 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
+  },
+  // COD & Delivery Info Banner
+  infoBanner: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: "#F59E0B",
+    gap: 12,
+  },
+  infoBannerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  infoBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#F59E0B",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  infoBannerContent: {
+    flex: 1,
+    gap: 2,
+  },
+  infoBannerTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#1F2937",
+  },
+  infoBannerSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 18,
+  },
+  infoBannerDivider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 4,
   },
 });

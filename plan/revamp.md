@@ -1,0 +1,3 @@
+in cart screen , if any  product stock is 0 then then it get highlighted with red out of stock and it should not proced to checkout screen , if stock is less than quantity then it should not proced to checkout screen, also if stock is less than 2 , show limited stock !hurry up highlight.
+ on checkout screen ,  make a bigger highlight that we only accept Cash on delivery Order and Deleivery can take 24-48 hours from order placed.
+ 

@@ -27,7 +27,6 @@ export const useOrders = (
     queryKey: ["orders", "list"],
     queryFn: async (): Promise<OrdersListResponse> => {
       const response = await apiClient.get<OrdersListResponse>("/orders/list");
-      console.log("[useOrders] Response:", response.data);
       return response.data;
     },
     staleTime: 30 * 1000, // 30 seconds - orders should be relatively fresh

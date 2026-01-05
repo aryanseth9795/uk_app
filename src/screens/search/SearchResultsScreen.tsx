@@ -1,4 +1,4 @@
-// Search Results Screen - Vertical Product Grid
+
 import React, { useMemo } from "react";
 import {
   View,
@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
-import { FlashList } from "@shopify/flash-list";
+// import { FlashList } from "@shopify/flash-list";
 
 // Components
 import SafeScreen from "@components/SafeScreen";
@@ -61,12 +61,12 @@ export default function SearchResultsScreen() {
         price: price,
         mrp: mrp,
         image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
-        searchScore: p.searchScore || 0,
+        searchScore: p.score || 0,
         variantCount: p.variants?.length || 0,
       };
 
-      // Separate by search score
-      if ((p.searchScore ?? 0) > 9) {
+      // Separate by search score (>6 = main results, <=6 = suggestions)
+      if ((p.score ?? 0) > 6) {
         main.push(product);
       } else {
         suggestions.push(product);
@@ -145,10 +145,15 @@ export default function SearchResultsScreen() {
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }}>
-          {/* Main Results (score > 9) */}
+          {/* Main Results (score > 6) */}
           {mainProducts.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Top Results</Text>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconContainer}>
+                  <Text style={styles.sectionIcon}>🎯</Text>
+                </View>
+                <Text style={styles.sectionTitle}>Search Results</Text>
+              </View>
               <View style={styles.gridContainer}>
                 {mainProducts.map((item) => (
                   <View key={item.id} style={styles.gridItem}>
@@ -175,12 +180,20 @@ export default function SearchResultsScreen() {
             </View>
           )}
 
-          {/* Suggestions (score ≤ 9) */}
+          {/* Separator between sections */}
+          {mainProducts.length > 0 && suggestionProducts.length > 0 && (
+            <View style={styles.separator} />
+          )}
+
+          {/* Suggestions (score ≤ 6) */}
           {suggestionProducts.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                You would like this product also
-              </Text>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconContainer}>
+                  <Text style={styles.sectionIcon}>✨</Text>
+                </View>
+                <Text style={styles.sectionTitle}>You Would Also Like</Text>
+              </View>
               <View style={styles.gridContainer}>
                 {suggestionProducts.map((item) => (
                   <View key={item.id} style={styles.gridItem}>
@@ -217,7 +230,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
@@ -228,33 +241,33 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#8366CC",
   },
   titleContainer: {
     flex: 1,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    color: "#6B7280",
+    color: "#9CA3AF",
     marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "800",
-    color: "#8366CC",
+    fontWeight: "900",
+    color: "#1F2937",
   },
   resultsInfo: {
-    paddingHorizontal: 4,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: "#F9FAFB",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   resultsCount: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
     color: "#6B7280",
   },
   centerContainer: {
@@ -303,26 +316,51 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     textAlign: "center",
   },
+  separator: {
+    height: 8,
+    backgroundColor: "#F3F4F6",
+    marginVertical: 8,
+  },
   section: {
-    paddingVertical: 16,
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  sectionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#F3F0FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionIcon: {
+    fontSize: 18,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "900",
     color: "#1F2937",
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    flex: 1,
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
+    justifyContent: "center",
   },
   gridContent: {
     padding: 16,
   },
   gridItem: {
     width: CARD_WIDTH,
-    padding: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
 });

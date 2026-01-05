@@ -1,4 +1,4 @@
-// src/screens/address/AddAddressScreen.tsx
+
 import React, { useRef, useState } from "react";
 import {
   View,
@@ -30,13 +30,13 @@ export default function AddAddressScreen() {
   const { mutate: addAddress, isPending } = useAddAddress();
 
   // Prefilled dummy address for testing
-  const [receiverName, setReceiverName] = useState("Aryan Seth");
-  const [receiverPhone, setReceiverPhone] = useState("9795785251");
-  const [label, setLabel] = useState("Home");
-  const [line1, setLine1] = useState("Hamam Darwaja Ajmeri");
+  const [receiverName, setReceiverName] = useState("");
+  const [receiverPhone, setReceiverPhone] = useState("");
+  const [label, setLabel] = useState("");
+  const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
-  const [city, setCity] = useState("Jaunpur");
-  const [pincode, setPincode] = useState("222001");
+  const [city, setCity] = useState("");
+  const [pincode, setPincode] = useState("");
 
   // Refs for "next" focus
   const phoneRef = useRef<TextInput>(null);
@@ -106,6 +106,7 @@ export default function AddAddressScreen() {
       >
         <Field
           label="Receiver Name *"
+         
           value={receiverName}
           onChangeText={setReceiverName}
           returnKeyType="next"
@@ -221,7 +222,7 @@ function Field({
     | "numeric"
     | "phone-pad";
   returnKeyType?: "done" | "next" | "go" | "send" | "search";
-  inputRef?: InputRef; // <-- accept both RefObject & MutableRefObject (nullable)
+  inputRef?: InputRef; 
   blurOnSubmit?: boolean;
   onSubmitEditing?: () => void;
 }) {
@@ -231,7 +232,7 @@ function Field({
         {label}
       </Text>
       <TextInput
-        ref={inputRef as any} // safe: both ref shapes are supported by RN
+        ref={inputRef as any} 
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
