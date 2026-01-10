@@ -184,7 +184,6 @@ export default function AllOrdersScreen() {
           <OrderCard
             order={item}
             onPress={() => {
-             
               navigation.navigate("OrderDetail", { order: item });
             }}
           />
@@ -306,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   rightInfo: {
-    width: 90,
+    width: 100,
     justifyContent: "flex-start",
     alignItems: "flex-end",
   },
@@ -362,7 +361,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#fff",
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   viewDetailsRow: {
     flexDirection: "row",

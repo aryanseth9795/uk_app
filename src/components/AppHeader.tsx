@@ -29,7 +29,7 @@ type Props = {
 
 export default function AppHeader({
   title = 'UR Shop',
-  subtitle = 'Beauty • Gifts • Fragrance',
+  subtitle = 'Aap Ki Apni Dukaan',
   showSearch = true,
   searchValue,
   onSearchChange,

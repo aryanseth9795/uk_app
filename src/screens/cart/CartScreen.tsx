@@ -290,10 +290,23 @@ export default function CartScreen() {
       if (currentKeys.has(key)) {
         sellingTotal += itemTotalsRef.current[key].selling;
       } else {
-        // Optional: Clean up stale entries to prevent memory leaks
-        // delete itemTotalsRef.current[key];
+        // Clean up stale entries to prevent memory leaks
+        delete itemTotalsRef.current[key];
       }
     });
+
+    // Clean up stale stock info
+    Object.keys(stockInfoRef.current).forEach((key) => {
+      if (!currentKeys.has(key)) {
+        delete stockInfoRef.current[key];
+      }
+    });
+
+    // Re-check stock issues with current items only
+    const issues = Object.values(stockInfoRef.current).some(
+      (item) => item.stock === 0 || item.stock < item.qty
+    );
+    setHasStockIssues(issues);
 
     const finalTotals = {
       sellingTotal,

@@ -388,6 +388,13 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* MIDDLE Banners - After Quick Access */}
+        {banners.middle.length > 0 && (
+          <View style={styles.bannerContainer}>
+            <BannerSection banners={banners.middle} />
+          </View>
+        )}
+
         {/* Loading State */}
         {landingLoading && !landingData && (
           <View style={styles.loadingContainer}>
@@ -438,13 +445,6 @@ export default function HomeScreen() {
             }}
           />
         ))}
-
-        {/* MIDDLE Banners - After Categories */}
-        {banners.middle.length > 0 && (
-          <View style={styles.bannerContainer}>
-            <BannerSection banners={banners.middle} />
-          </View>
-        )}
 
         {/* BOTTOM Banners - Before Mixed Products Title */}
         {banners.bottom.length > 0 && (

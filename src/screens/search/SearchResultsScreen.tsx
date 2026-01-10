@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   ActivityIndicator,
   Pressable,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 // import { FlashList } from "@shopify/flash-list";
@@ -125,6 +125,18 @@ export default function SearchResultsScreen() {
     );
   }
 
+  // Handle Add to Cart with feedback
+  const handleAddToCart = (item: any) => {
+    dispatch(
+      addToCart({
+        id: item.id,
+        variantId: item.variantId,
+        qty: 1,
+      })
+    );
+    Alert.alert("Success", "Product added to cart!");
+  };
+
   // Results
   const totalResults = mainProducts.length + suggestionProducts.length;
 
@@ -164,15 +176,7 @@ export default function SearchResultsScreen() {
                           productId: item.id,
                         })
                       }
-                      onAdd={() =>
-                        dispatch(
-                          addToCart({
-                            id: item.id,
-                            variantId: item.variantId,
-                            qty: 1,
-                          })
-                        )
-                      }
+                      onAdd={() => handleAddToCart(item)}
                     />
                   </View>
                 ))}
@@ -204,15 +208,7 @@ export default function SearchResultsScreen() {
                           productId: item.id,
                         })
                       }
-                      onAdd={() =>
-                        dispatch(
-                          addToCart({
-                            id: item.id,
-                            variantId: item.variantId,
-                            qty: 1,
-                          })
-                        )
-                      }
+                      onAdd={() => handleAddToCart(item)}
                     />
                   </View>
                 ))}
