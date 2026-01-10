@@ -395,3 +395,31 @@ export type CancelOrderResponse = {
   message: string;
   order: Order;
 };
+
+// ===================================
+// BANNER TYPES
+// ===================================
+
+export type BannerImage = {
+  publicId: string;
+  url: string;
+  secureUrl: string;
+};
+
+export type Banner = {
+  _id: string;
+  title: string;
+  child?: number;
+  images: BannerImage[];
+};
+
+export type BannersResponse = {
+  success: true;
+  banners: Banner[];
+};
+
+export type NormalizedBanners = {
+  top: Banner[];
+  middle: Banner[];
+  bottom: Banner[];
+};

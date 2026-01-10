@@ -1,0 +1,3 @@
+also in product details screen we have to show stock update - like if stock 0 then show out of stock and disable add to cart button. if stock is less than 2 , show limited stock hurry up , etc 
+
+also in cart screen we have bug , when we remove product from cart screen ,  value not get reset . when i add a new product to cart screen , product listed but total amount add earlier product value also. it is critical bug. analyse whole flow of cart screen and remove this bug.

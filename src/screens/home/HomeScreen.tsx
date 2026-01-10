@@ -19,7 +19,7 @@ import SafeScreen from "@components/SafeScreen";
 import AppHeader from "@components/AppHeader";
 import QuickAccessCard from "@components/QuickAccessCard";
 import CategorySection from "@components/CategorySection";
-import PromoCarousel from "@components/PromoCarousel";
+import BannerSection from "@components/BannerSection";
 import ProductCard from "@components/ProductCard";
 
 // Hooks
@@ -30,6 +30,7 @@ import {
   useSearchProducts,
   useSearchSuggestions,
   useMixedProducts,
+  useBanners,
 } from "@api/hooks";
 import type { SearchFilters, MixedProductsResponse } from "@api/types";
 import { getPriceForQuantity } from "@utils/pricing";
@@ -50,6 +51,10 @@ export default function HomeScreen() {
   // ===================================
   // DATA FETCHING
   // ===================================
+
+  // Banners from API
+  const { data: bannersData } = useBanners();
+  const banners = bannersData || { top: [], middle: [], bottom: [] };
 
   // Landing page products (10 from each category)
   const {
@@ -206,42 +211,7 @@ export default function HomeScreen() {
     [navigation]
   );
 
-  // ===================================
-  // PROMO SLIDES
-  // ===================================
-
-  const SLIDES = useMemo(
-    () => [
-      {
-        id: "s1",
-        title: "Winter Glow Sale",
-        subtitle: "Up to 40% off on skincare & perfumes",
-        ctaText: "Shop now",
-        imageUrl:
-          "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=1000",
-        onPress: () => {},
-      },
-      {
-        id: "s2",
-        title: "New: Luxe Fragrances",
-        subtitle: "Handpicked for festive gifting",
-        ctaText: "Explore",
-        imageUrl:
-          "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000",
-        onPress: () => {},
-      },
-      {
-        id: "s3",
-        title: "Skincare Starter Kits",
-        subtitle: "Derm-approved routines for beginners",
-        ctaText: "Build your kit",
-        imageUrl:
-          "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=1000",
-        onPress: () => {},
-      },
-    ],
-    []
-  );
+  // Removed static SLIDES - now using dynamic banners from API
 
   // ===================================
   // ERROR HANDLING
@@ -346,7 +316,6 @@ export default function HomeScreen() {
             isLeftColumn ? styles.leftColumn : styles.rightColumn,
           ]}
         >
-          
           <ProductCard
             data={{
               title: item.title,
@@ -380,10 +349,12 @@ export default function HomeScreen() {
   const renderListHeader = useCallback(() => {
     return (
       <View>
-        {/* Promo Banner */}
-        <View style={styles.bannerContainer}>
-          <PromoCarousel slides={SLIDES} />
-        </View>
+        {/* TOP Banners - Dynamic from API */}
+        {banners.top.length > 0 && (
+          <View style={styles.bannerContainer}>
+            <BannerSection banners={banners.top} />
+          </View>
+        )}
 
         {/* Quick Access Cards */}
         <View style={styles.cardsContainer}>
@@ -468,9 +439,20 @@ export default function HomeScreen() {
           />
         ))}
 
- <View style={styles.bannerContainer}>
-          <PromoCarousel slides={SLIDES} />
-        </View>
+        {/* MIDDLE Banners - After Categories */}
+        {banners.middle.length > 0 && (
+          <View style={styles.bannerContainer}>
+            <BannerSection banners={banners.middle} />
+          </View>
+        )}
+
+        {/* BOTTOM Banners - Before Mixed Products Title */}
+        {banners.bottom.length > 0 && (
+          <View style={styles.bannerContainer}>
+            <BannerSection banners={banners.bottom} />
+          </View>
+        )}
+
         {/* Section Title for Mixed Products */}
         {flatMixedProducts.length > 0 && (
           <View style={styles.sectionTitleContainer}>
@@ -480,7 +462,7 @@ export default function HomeScreen() {
       </View>
     );
   }, [
-    SLIDES,
+    banners,
     landingLoading,
     landingData,
     handleQuickAccess,

@@ -1,32 +1,42 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, FlatList, NativeScrollEvent, NativeSyntheticEvent, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'expo-image';
-import { colors } from '@theme/color';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Dimensions,
+} from "react-native";
+import { Image } from "expo-image";
+import { colors } from "@theme/color";
 
 type Slide = {
   id: string;
-  title: string;
-  subtitle: string;
-  ctaText?: string;
   imageUrl: string;
   onPress?: () => void;
 };
 
 type Props = {
   slides: Slide[];
-  height?: number;       // default 160
-  intervalMs?: number;   // default 3000
+  height?: number; // default 160
+  intervalMs?: number; // default 3000
   borderRadius?: number; // default 20
 };
 
-const { width: SCREEN_W} = Dimensions.get('window');
+const { width: SCREEN_W } = Dimensions.get("window");
 
 export default function PromoCarousel({
   slides,
-  height = 150,
+  height = 200, // Increased height
   intervalMs = 3000,
-  borderRadius = 20,
+  borderRadius = 16, // Slightly sharper radius
 }: Props) {
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
@@ -35,9 +45,9 @@ export default function PromoCarousel({
   // ensure we have at least 1 slide
   const data = useMemo(() => (total > 0 ? slides : []), [slides, total]);
 
-  // Autoplay
+  // Autoplay (only if more than 1 slide)
   useEffect(() => {
-    if (total <= 1) return; // no autoplay for single slide
+    if (total <= 1) return; // No autoplay for single slide
     const id = setInterval(() => {
       const next = (index + 1) % total;
       listRef.current?.scrollToIndex({ index: next, animated: true });
@@ -47,79 +57,62 @@ export default function PromoCarousel({
   }, [index, total, intervalMs]);
 
   // Keep index in sync with manual swipes
-  const onMomentumEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const i = Math.round(x / SCREEN_W);
-    if (i !== index) setIndex(i);
-  }, [index]);
+  const onMomentumEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = e.nativeEvent.contentOffset.x;
+      const i = Math.round(x / SCREEN_W);
+      if (i !== index) setIndex(i);
+    },
+    [index]
+  );
 
   const keyExtractor = useCallback((item: Slide) => item.id, []);
+  // Calculate item width for centering
+  const ITEM_WIDTH = SCREEN_W;
+  const CARD_WIDTH = SCREEN_W - 32; // 16px padding on each side (Wider)
 
-  const renderItem = useCallback(({ item }: { item: Slide }) => (
-    <View style={{ width: SCREEN_W-30,  }}>
-      <LinearGradient
-        colors={[colors.headerStart, colors.headerEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+  const renderItem = useCallback(
+    ({ item }: { item: Slide }) => (
+      <View
         style={{
-          height,
-          marginHorizontal: 8,
-          borderRadius,
-          overflow: 'hidden',
-          shadowColor: '#000',
-          shadowOpacity: 0.12,
-          shadowRadius: 14,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 6,
+          width: ITEM_WIDTH,
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, gap: 14, flex: 1 }}>
-          {/* Text block */}
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: '#fff',
-                fontSize: 20,
-                fontWeight: '900',
-                letterSpacing: -0.2,
-                lineHeight: 24,
-              }}
-              numberOfLines={1}
-            >
-              {item.title}
-            </Text>
-            <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 6 }} numberOfLines={2}>
-              {item.subtitle}
-            </Text>
-
-            {!!item.ctaText && (
-              <Pressable
-                onPress={item.onPress}
-                style={{
-                  alignSelf: 'flex-start',
-                  marginTop: 12,
-                  backgroundColor: '#fff',
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 999,
-                }}
-              >
-                <Text style={{ color: colors.headerEnd, fontWeight: '700' }}>{item.ctaText}</Text>
-              </Pressable>
-            )}
-          </View>
-
-          {/* Decorative product image */}
+        <Pressable
+          onPress={item.onPress}
+          style={{
+            width: CARD_WIDTH,
+            height,
+            borderRadius,
+            overflow: "hidden",
+            // Enhanced Shadow / "Stand Out"
+            backgroundColor: "#fff",
+            borderWidth: 1,
+            borderColor: "rgba(131, 102, 204, 0.2)", // Subtle primary stroke
+            shadowColor: "#8366CC", // Primary colored shadow
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+          }}
+        >
           <Image
             source={{ uri: item.imageUrl }}
-            style={{ width: height - 50, height: height - 50, borderRadius: 16 }}
-            contentFit="cover"
-            transition={150}
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: colors.tint,
+            }}
+            contentFit="contain"
+            transition={300}
           />
-        </View>
-      </LinearGradient>
-    </View>
-  ), [borderRadius, height]);
+        </Pressable>
+      </View>
+    ),
+    [borderRadius, height, CARD_WIDTH, ITEM_WIDTH]
+  );
 
   if (data.length === 0) return null;
 
@@ -138,24 +131,35 @@ export default function PromoCarousel({
         nestedScrollEnabled={false}
       />
 
-      {/* Dots */}
-      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-        {data.map((_, i) => {
-          const active = i === index;
-          return (
-            <View
-              key={i}
-              style={{
-                width: active ? 18 : 6,
-                height: 6,
-                borderRadius: 3,
-                marginHorizontal: 4,
-                backgroundColor: active ? colors.headerEnd : 'rgba(0,0,0,0.15)',
-              }}
-            />
-          );
-        })}
-      </View>
+      {/* Dots (only show if more than 1 slide) */}
+      {total > 1 && (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 10,
+          }}
+        >
+          {data.map((_, i) => {
+            const active = i === index;
+            return (
+              <View
+                key={i}
+                style={{
+                  width: active ? 18 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  marginHorizontal: 4,
+                  backgroundColor: active
+                    ? colors.headerEnd
+                    : "rgba(0,0,0,0.15)",
+                }}
+              />
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }

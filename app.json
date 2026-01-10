@@ -12,9 +12,12 @@
       "backgroundColor": "#6F56BF"
     },
     "updates": {
-      "enabled": true
+      "enabled": true,
+      "url": "https://u.expo.dev/b70345c5-868e-4dce-901a-fd05810ec451"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false
     },
@@ -25,7 +28,10 @@
         "monochromeImage": "./assets/icon.png"
       },
       "googleServicesFile": "./google-services.json",
-      "permissions": ["android.permission.POST_NOTIFICATIONS"],
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
       "package": "com.aryanseth9795.urshop"
     },
     "extra": {
@@ -34,6 +40,12 @@
       }
     },
     "owner": "aryanseth9795",
-    "plugins": ["expo-secure-store", "expo-font"]
+    "plugins": [
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

@@ -275,12 +275,25 @@ export default function CartScreen() {
     return user.addresses[0];
   }, [user?.addresses, primaryAddressId]);
 
-  // Recalculate totals whenever itemTotalsRef changes
+  // Recalculate totals whenever itemTotalsRef changes or cartItems changes
   const recalculateTotals = () => {
-    const sellingTotal = Object.values(itemTotalsRef.current).reduce(
-      (sum, item) => sum + item.selling,
-      0
+    let sellingTotal = 0;
+
+    // Use a set of keys for O(1) lookup
+    const currentKeys = new Set(
+      cartItems.map((item) => `${item.id}-${item.variantId}`)
     );
+
+    // Filter totals to only include items currently in the cart
+    // This prevents "ghost" totals from removed items affecting the sum
+    Object.keys(itemTotalsRef.current).forEach((key) => {
+      if (currentKeys.has(key)) {
+        sellingTotal += itemTotalsRef.current[key].selling;
+      } else {
+        // Optional: Clean up stale entries to prevent memory leaks
+        // delete itemTotalsRef.current[key];
+      }
+    });
 
     const finalTotals = {
       sellingTotal,
@@ -289,6 +302,11 @@ export default function CartScreen() {
 
     setTotals(finalTotals);
   };
+
+  // Re-run calculation when cart items change to ensure removed items are excluded immediately
+  useEffect(() => {
+    recalculateTotals();
+  }, [cartItems]);
 
   // Reset totals when cart is cleared
   React.useEffect(() => {
@@ -486,8 +504,6 @@ export default function CartScreen() {
 
       {/* Fixed Footer - Only Grand Total and Checkout */}
       <View style={styles.footer}>
-     
-
         {/* Grand Total - Fixed at bottom */}
         <View style={styles.grandTotalRow}>
           <Text style={styles.grandTotalLabel}>Grand Total:</Text>

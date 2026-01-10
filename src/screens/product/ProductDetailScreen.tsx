@@ -58,6 +58,14 @@ export default function ProductDetailScreen() {
     );
   }, [cartItems, productId, selectedVariant]);
 
+  // Stock Validation
+  const isOutOfStock = selectedVariant?.stock === 0;
+  const isLowStock =
+    selectedVariant &&
+    selectedVariant.stock !== undefined &&
+    selectedVariant.stock > 0 &&
+    selectedVariant.stock < 2;
+
   // Similar products
   const {
     data: similarData,
@@ -226,6 +234,23 @@ export default function ProductDetailScreen() {
           {/* Product Name */}
           <Text style={styles.productName}>{product.name}</Text>
 
+          {/* Stock Badges */}
+          {isOutOfStock && (
+            <View style={styles.outOfStockBadge}>
+              <Ionicons name="alert-circle" size={16} color="#EF4444" />
+              <Text style={styles.outOfStockText}>Currently Unavailable</Text>
+            </View>
+          )}
+
+          {!isOutOfStock && isLowStock && (
+            <View style={styles.lowStockBadge}>
+              <Ionicons name="flash" size={16} color="#F59E0B" />
+              <Text style={styles.lowStockText}>
+                Hurry! Only {selectedVariant?.stock} left in stock
+              </Text>
+            </View>
+          )}
+
           {/* Price */}
           {priceInfo && (
             <View style={styles.priceContainer}>
@@ -336,25 +361,49 @@ export default function ProductDetailScreen() {
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
                 style={[
                   styles.quantityBtn,
-                  quantity === 1 && styles.quantityBtnDisabled,
+                  (quantity === 1 || isOutOfStock) &&
+                    styles.quantityBtnDisabled,
                 ]}
-                disabled={quantity === 1}
+                disabled={quantity === 1 || isOutOfStock}
               >
                 <Ionicons
                   name="remove"
                   size={22}
-                  color={quantity === 1 ? "#D1D5DB" : "#6366F1"}
+                  color={quantity === 1 || isOutOfStock ? "#D1D5DB" : "#6366F1"}
                 />
               </Pressable>
               <View style={styles.quantityDisplay}>
-                <Text style={styles.quantityText}>{quantity}</Text>
+                <Text
+                  style={[
+                    styles.quantityText,
+                    isOutOfStock && styles.textDisabled,
+                  ]}
+                >
+                  {isOutOfStock ? 0 : quantity}
+                </Text>
                 <Text style={styles.quantityLabel}>items</Text>
               </View>
               <Pressable
-                onPress={() => setQuantity(quantity + 1)}
-                style={styles.quantityBtn}
+                onPress={() => {
+                  if (
+                    selectedVariant?.stock &&
+                    quantity >= selectedVariant.stock
+                  ) {
+                    return; // Max stock reached
+                  }
+                  setQuantity(quantity + 1);
+                }}
+                style={[
+                  styles.quantityBtn,
+                  isOutOfStock && styles.quantityBtnDisabled,
+                ]}
+                disabled={isOutOfStock}
               >
-                <Ionicons name="add" size={22} color="#6366F1" />
+                <Ionicons
+                  name="add"
+                  size={22}
+                  color={isOutOfStock ? "#D1D5DB" : "#6366F1"}
+                />
               </Pressable>
             </View>
           </View>
@@ -484,17 +533,24 @@ export default function ProductDetailScreen() {
           <Text
             style={[
               styles.addToCartText,
-              isInCart && styles.buttonTextDisabled,
+              (isInCart || isOutOfStock) && styles.buttonTextDisabled,
             ]}
           >
-            {isInCart ? "In Cart" : "Add to Cart"}
+            {isOutOfStock
+              ? "Out of Stock"
+              : isInCart
+              ? "In Cart"
+              : "Add to Cart"}
           </Text>
         </Pressable>
 
         <Pressable
           onPress={handleBuyNow}
-          disabled={!selectedVariant}
-          style={[styles.buyNowBtn, !selectedVariant && styles.buttonDisabled]}
+          disabled={!selectedVariant || isOutOfStock}
+          style={[
+            styles.buyNowBtn,
+            (!selectedVariant || isOutOfStock) && styles.buttonDisabled,
+          ]}
         >
           <Text style={styles.buyNowText}>Buy Now</Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -798,57 +854,57 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   similarImageWrapper: {
-    position: "relative",
+    width: 150,
+    height: 150,
+    backgroundColor: "#F3F4F6",
   },
   similarImage: {
     width: "100%",
-    height: 150,
-    backgroundColor: "#F9FAFB",
+    height: "100%",
   },
   similarDiscountBadge: {
     position: "absolute",
     top: 8,
-    right: 8,
+    left: 8,
     backgroundColor: "#16A34A",
     paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   similarDiscountText: {
-    fontSize: 10,
-    fontWeight: "800",
     color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   similarInfo: {
-    padding: 12,
-    gap: 6,
+    padding: 10,
+    gap: 4,
   },
   similarBrand: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "600",
     color: "#6B7280",
     textTransform: "uppercase",
   },
   similarName: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1F2937",
-    lineHeight: 16,
+    height: 36,
   },
   similarPriceRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 4,
+    marginTop: 2,
   },
   similarPrice: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
     color: "#1F2937",
   },
   similarMrp: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11,
     color: "#9CA3AF",
     textDecorationLine: "line-through",
   },
@@ -856,32 +912,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 4,
     marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1.5,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
     borderColor: "#8366CC",
     backgroundColor: "#F5F3FF",
   },
   similarAddText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     color: "#8366CC",
   },
   bottomBar: {
     flexDirection: "row",
     padding: 16,
-    gap: 12,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
+    gap: 12,
   },
   addToCartBtn: {
     flex: 1,
@@ -891,14 +941,9 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#8366CC",
     backgroundColor: "#fff",
-  },
-  addToCartText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#8366CC",
   },
   buyNowBtn: {
     flex: 1,
@@ -910,15 +955,58 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#8366CC",
   },
-  buyNowText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#fff",
-  },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonTextDisabled: {
+    color: "#9CA3AF",
+  },
+  addToCartText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#8366CC",
+  },
+  buyNowText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  // Stock Badge Styles
+  outOfStockBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    alignSelf: "flex-start",
+  },
+  outOfStockText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#EF4444",
+  },
+  lowStockBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FFFBEB",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    alignSelf: "flex-start",
+  },
+  lowStockText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#D97706",
+  },
+  textDisabled: {
     color: "#9CA3AF",
   },
 });
