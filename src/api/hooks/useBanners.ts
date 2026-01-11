@@ -43,7 +43,7 @@ function normalizeBanners(banners: Banner[]): NormalizedBanners {
 
 export const useBanners = (
   options?: Omit<
-    UseQueryOptions<NormalizedBanners>,
+    UseQueryOptions<BannersResponse, Error, NormalizedBanners, string[]>,
     "queryKey" | "queryFn" | "select"
   >
 ) => {

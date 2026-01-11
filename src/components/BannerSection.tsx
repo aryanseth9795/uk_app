@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import PromoCarousel from "./PromoCarousel";
 import type { Banner } from "@api/types";
 
@@ -10,26 +11,33 @@ type Props = {
 /**
  * BannerSection Component
  *
- * Transforms banner data from API into carousel slides format
- * and renders them using PromoCarousel component.
+ * Displays banners stacked vertically. Each banner with its images
+ * is rendered as a separate carousel.
  *
- * Supports both single and multiple banners:
- * - Single banner with single image: Static display
- * - Single banner with multiple images: Carousel of those images
- * - Multiple banners: Each banner's images in carousel
+ * Banners with the same title but different child values will be
+ * displayed one below the other (child 1 on top, child 2 below it, etc.)
  */
 export default function BannerSection({ banners, height }: Props) {
-  // Transform banners into slides format expected by PromoCarousel
-  const slides = banners.flatMap((banner) =>
-    banner.images.map((img, idx) => ({
-      id: `${banner._id}-${idx}`,
-      imageUrl: img.secureUrl,
-      onPress: undefined, // No action for now
-    }))
+  // Don't render if no banners
+  if (banners.length === 0) return null;
+
+  return (
+    <View>
+      {banners.map((banner) => {
+        // Transform banner images into slides
+        const slides = banner.images.map((img, idx) => ({
+          id: `${banner._id}-${idx}`,
+          imageUrl: img.secureUrl,
+          onPress: undefined, // No action for now
+        }));
+
+        // Render each banner as its own carousel
+        return (
+          <View key={banner._id} style={{ marginBottom: 16 }}>
+            <PromoCarousel slides={slides} height={height} />
+          </View>
+        );
+      })}
+    </View>
   );
-
-  // Don't render if no slides
-  if (slides.length === 0) return null;
-
-  return <PromoCarousel slides={slides} height={height} />;
 }
