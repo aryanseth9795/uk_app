@@ -34,7 +34,7 @@ const { width: SCREEN_W } = Dimensions.get("window");
 
 export default function PromoCarousel({
   slides,
-  height = 200, // Increased height
+  height = 185, // Increased height
   intervalMs = 3000,
   borderRadius = 16, // Slightly sharper radius
 }: Props) {
@@ -105,7 +105,7 @@ export default function PromoCarousel({
               height: "100%",
               backgroundColor: colors.bg,
             }}
-            contentFit="contain"
+            contentFit="fill"
             transition={300}
           />
         </Pressable>

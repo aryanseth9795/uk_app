@@ -33,7 +33,7 @@ export default function BannerSection({ banners, height }: Props) {
 
         // Render each banner as its own carousel
         return (
-          <View key={banner._id} style={{ marginBottom: 16 }}>
+          <View key={banner._id} style={{ marginBottom: 12 }}>
             <PromoCarousel slides={slides} height={height} />
           </View>
         );

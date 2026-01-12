@@ -49,7 +49,7 @@ export default function QuickAccessCard({
 const styles = StyleSheet.create({
   container: {
     width: "48%",
-    marginBottom: 12,
+    marginBottom: 10,
     borderRadius: 16,
     overflow: "hidden",
     elevation: 4,

@@ -1,4 +1,3 @@
-// App.tsx - Main App Entry Point
 import "react-native-gesture-handler";
 import React, { useEffect, useRef, useCallback } from "react";
 import { StatusBar } from "expo-status-bar";
