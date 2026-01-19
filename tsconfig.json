@@ -14,8 +14,8 @@
       "@services/*": ["src/services/*"],
       "@hooks/*": ["src/hooks/*"],
       "@assets/*": ["src/assets/*"],
-      "@api/*": ["src/api/*"]
-      
+      "@api/*": ["src/api/*"],
+      "@context/*": ["src/context/*"]
     }
   }
 }

@@ -1,0 +1,295 @@
+now we have to update categoryProduct screen -- after horizontal category product , will show vertical product with pagination.
+and same thing in quick access screen.as well
+in product detail screen , we will remove stock updater button and after similar product section we will show vertical product with pagination. heading - product you may like in this category. 
+
+here is api doc -# Product API Updates Documentation
+
+## Overview
+
+This document describes the recently updated and new product API endpoints for the frontend team.
+
+---
+
+## 1. Get Similar Products (Updated)
+
+Returns both level 2 and level 1 similar products for a given sub-sub-category.
+
+### Endpoint
+
+```
+GET /api/user/products/similar/:categoryId
+```
+
+### Parameters
+
+| Parameter          | Type   | Location  | Required | Description                            |
+| ------------------ | ------ | --------- | -------- | -------------------------------------- |
+| `categoryId`       | string | URL param | Yes      | Level 2 category (sub-sub-category) ID |
+| `excludeProductId` | string | Query     | No       | Product ID to exclude from results     |
+
+### Response
+
+```json
+{
+  "success": true,
+  "level2Category": {
+    "categoryId": "675a1b2c3d4e5f6789012345",
+    "categoryName": "Perfume Oils"
+  },
+  "level1Category": {
+    "categoryId": "675a1b2c3d4e5f6789012340",
+    "categoryName": "Fragrances"
+  },
+  "level2Products": {
+    "total": 10,
+    "products": [
+      {
+        "_id": "675a1b2c3d4e5f6789012500",
+        "name": "Arabian Oud",
+        "brand": "Premium Scents",
+        "thumbnail": {
+          "url": "https://res.cloudinary.com/...",
+          "public_id": "products/..."
+        },
+        "variants": [
+          {
+            "_id": "675a1b2c3d4e5f6789012501",
+            "stock": 25,
+            "mrp": 1500,
+            "sellingPrices": [
+              { "minQty": 1, "price": 1200 },
+              { "minQty": 5, "price": 1100 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "level1Products": {
+    "total": 15,
+    "products": [
+      // Same structure as level2Products
+      // Max 15 products from parent sub-category
+      // Excludes products already in level2Products
+    ]
+  }
+}
+```
+
+### Notes
+
+- `level2Products`: Max 10 products from the same sub-sub-category
+- `level1Products`: Max 15 products from the parent sub-category (excludes level2 products to avoid duplicates)
+
+---
+
+## 2. Get Filtered Mixed Products (New)
+
+Returns a paginated flat list of products filtered by type (cheapest, newest, top discount, top seller).
+
+### Endpoint
+
+```
+GET /api/user/products/mixed/filtered
+```
+
+### Query Parameters
+
+| Parameter | Type   | Required | Default | Description                                                   |
+| --------- | ------ | -------- | ------- | ------------------------------------------------------------- |
+| `filter`  | string | Yes      | -       | Filter type: `cheapest`, `newest`, `topDiscount`, `topSeller` |
+| `page`    | string | No       | `"1"`   | Page number                                                   |
+
+### Filter Types
+
+| Filter        | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `cheapest`    | Products sorted by lowest selling price         |
+| `newest`      | Products sorted by creation date (newest first) |
+| `topDiscount` | Products with highest discount percentage       |
+| `topSeller`   | Top selling products (based on sales data)      |
+
+### Response
+
+```json
+{
+  "success": true,
+  "filter": "cheapest",
+  "page": 1,
+  "limit": 14,
+  "totalProducts": 156,
+  "totalPages": 12,
+  "hasNextPage": true,
+  "hasPreviousPage": false,
+  "products": [
+    {
+      "_id": "675a1b2c3d4e5f6789012500",
+      "name": "Budget Face Cream",
+      "brand": "Value Beauty",
+      "thumbnail": {
+        "url": "https://res.cloudinary.com/...",
+        "public_id": "products/..."
+      },
+      "variants": [
+        {
+          "_id": "675a1b2c3d4e5f6789012501",
+          "stock": 50,
+          "mrp": 200,
+          "sellingPrices": [
+            { "minQty": 1, "price": 150 },
+            { "minQty": 10, "price": 140 }
+          ]
+        }
+      ]
+    }
+    // ... 13 more products (14 per page)
+  ]
+}
+```
+
+### Example Requests
+
+```
+GET /api/user/products/mixed/filtered?filter=cheapest&page=1
+GET /api/user/products/mixed/filtered?filter=newest&page=2
+GET /api/user/products/mixed/filtered?filter=topDiscount&page=1
+GET /api/user/products/mixed/filtered?filter=topSeller&page=3
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "message": "Please provide a valid filter: cheapest, newest, topDiscount, or topSeller"
+}
+```
+
+---
+
+## 3. Get Category Products Mixed (New)
+
+Returns a paginated flat list of products for a category, with behavior based on category level.
+
+### Endpoint
+
+```
+GET /api/user/products/category/:categoryId/mixed
+```
+
+### Parameters
+
+| Parameter    | Type   | Location  | Required | Default | Description |
+| ------------ | ------ | --------- | -------- | ------- | ----------- |
+| `categoryId` | string | URL param | Yes      | -       | Category ID |
+| `page`       | string | Query     | No       | `"1"`   | Page number |
+
+### Behavior by Category Level
+
+| Level              | Description                                                        |
+| ------------------ | ------------------------------------------------------------------ |
+| **Level 0** (Root) | Returns mixed products from all level 1 & level 2 child categories |
+| **Level 1** (Sub)  | Returns mixed products from all level 2 child categories           |
+| **Level 2** (Leaf) | Returns products directly from that category                       |
+
+### Response
+
+```json
+{
+  "success": true,
+  "categoryId": "675a1b2c3d4e5f6789012300",
+  "categoryName": "Beauty & Personal Care",
+  "level": 0,
+  "page": 1,
+  "limit": 14,
+  "totalProducts": 234,
+  "totalPages": 17,
+  "hasNextPage": true,
+  "hasPreviousPage": false,
+  "products": [
+    {
+      "_id": "675a1b2c3d4e5f6789012500",
+      "name": "Luxury Face Serum",
+      "brand": "Glow Labs",
+      "thumbnail": {
+        "url": "https://res.cloudinary.com/...",
+        "public_id": "products/..."
+      },
+      "variants": [
+        {
+          "_id": "675a1b2c3d4e5f6789012501",
+          "stock": 30,
+          "mrp": 1200,
+          "sellingPrices": [
+            { "minQty": 1, "price": 999 },
+            { "minQty": 3, "price": 950 }
+          ]
+        }
+      ]
+    }
+    // ... 13 more products (14 per page)
+  ]
+}
+```
+
+### Example Requests
+
+```
+# Level 0 category - returns products from all children
+GET /api/user/products/category/675a1b2c3d4e5f6789012300/mixed?page=1
+
+# Level 1 category - returns products from level 2 children
+GET /api/user/products/category/675a1b2c3d4e5f6789012340/mixed?page=2
+
+# Level 2 category - returns products from this category only
+GET /api/user/products/category/675a1b2c3d4e5f6789012345/mixed?page=1
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "message": "Category not found"
+}
+```
+
+---
+
+## Common Response Fields
+
+### Pagination Fields
+
+| Field             | Type    | Description                      |
+| ----------------- | ------- | -------------------------------- |
+| `page`            | number  | Current page number              |
+| `limit`           | number  | Products per page (always 14)    |
+| `totalProducts`   | number  | Total products matching criteria |
+| `totalPages`      | number  | Total number of pages            |
+| `hasNextPage`     | boolean | Whether more pages exist         |
+| `hasPreviousPage` | boolean | Whether previous page exists     |
+
+### Product Object
+
+| Field       | Type   | Description                                |
+| ----------- | ------ | ------------------------------------------ |
+| `_id`       | string | Product ID                                 |
+| `name`      | string | Product name                               |
+| `brand`     | string | Brand name                                 |
+| `thumbnail` | object | Thumbnail image with `url` and `public_id` |
+| `variants`  | array  | Product variants                           |
+
+### Variant Object
+
+| Field           | Type   | Description                         |
+| --------------- | ------ | ----------------------------------- |
+| `_id`           | string | Variant ID                          |
+| `stock`         | number | Available stock                     |
+| `mrp`           | number | Maximum retail price                |
+| `sellingPrices` | array  | Tier pricing: `[{ minQty, price }]` |
+
+---
+
+## Caching
+
+All endpoints are cached for **2 minutes** (120 seconds) using Redis with prefix `user:products`.

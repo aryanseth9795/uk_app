@@ -22,6 +22,7 @@ import { queryClient } from "@utils/queryClient";
 import { colors } from "@theme/color";
 import AuthInitializer from "@components/AuthInitializer";
 import { setupNotificationHandler } from "@services/notificationService";
+import { CartToastProvider } from "@context/CartToastContext";
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync();
@@ -63,7 +64,7 @@ export default function App() {
     const notificationListener = Notifications.addNotificationReceivedListener(
       (notification) => {
         console.log("Notification received in foreground:", notification);
-      }
+      },
     );
 
     // Listener for when user taps on a notification
@@ -109,14 +110,16 @@ export default function App() {
           <QueryClientProvider client={queryClient}>
             <AuthInitializer />
             <SafeAreaProvider>
-              <NavigationContainer theme={navTheme} ref={navigationRef}>
-                <StatusBar
-                  style="light"
-                  translucent={false}
-                  backgroundColor={colors.headerStart}
-                />
-                <RootNavigator />
-              </NavigationContainer>
+              <CartToastProvider>
+                <NavigationContainer theme={navTheme} ref={navigationRef}>
+                  <StatusBar
+                    style="light"
+                    translucent={false}
+                    backgroundColor={colors.headerStart}
+                  />
+                  <RootNavigator />
+                </NavigationContainer>
+              </CartToastProvider>
             </SafeAreaProvider>
           </QueryClientProvider>
         </PersistGate>

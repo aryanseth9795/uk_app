@@ -30,7 +30,7 @@ type CategorySectionProps = {
   products: Product[];
   onPressMore: (categoryId: string, categoryName: string) => void;
   onPressProduct: (id: string) => void;
-  onAddToCart: (id: string, variantId: string) => void;
+  onAddToCart: (id: string, variantId: string, productName?: string) => void;
 };
 
 function CategorySection({
@@ -79,7 +79,9 @@ function CategorySection({
             <ProductCard
               data={product}
               onPress={() => onPressProduct(product.id)}
-              onAdd={() => onAddToCart(product.id, product.variantId)}
+              onAdd={() =>
+                onAddToCart(product.id, product.variantId, product.title)
+              }
             />
           </View>
         ))}
@@ -92,7 +94,6 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 1,
     padding: 0,
- 
   },
   header: {
     flexDirection: "row",
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingLeft: 16,
-    paddingRight: 80, 
+    paddingRight: 80,
     marginTop: 1,
   },
 });

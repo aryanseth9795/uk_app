@@ -15,6 +15,8 @@ import type {
   SearchSuggestionsResponse,
   SearchFilters,
   MixedProductsResponse,
+  FilteredMixedProductsResponse,
+  CategoryMixedProductsResponse,
 } from "../types";
 
 // ===================================
@@ -130,8 +132,10 @@ export const useSimilarProducts = (
     "queryKey" | "queryFn"
   >
 ) => {
+  console.log(categoryId,excludeProductId);
   return useQuery({
     queryKey: ["products", "similar", categoryId, excludeProductId],
+    
     queryFn: async (): Promise<SimilarProductsResponse> => {
       const response = await apiClient.get<SimilarProductsResponse>(
         `/products/similar/${categoryId}`,
@@ -237,6 +241,92 @@ export const useMixedProducts = (
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
+      return lastPage.hasNextPage ? lastPage.page + 1 : undefined;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    ...options,
+  });
+};
+
+// ===================================
+// FILTERED MIXED PRODUCTS (Infinite Scroll)
+// ===================================
+
+export type MixedFilterType =
+  | "cheapest"
+  | "newest"
+  | "topDiscount"
+  | "topSeller";
+
+export const useFilteredMixedProducts = (
+  filter: MixedFilterType,
+  options?: Omit<
+    UseInfiniteQueryOptions<FilteredMixedProductsResponse>,
+    "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
+  >
+) => {
+  return useInfiniteQuery({
+    queryKey: ["products", "mixed", "filtered", filter] as const,
+    queryFn: async ({
+      pageParam = 1,
+    }): Promise<FilteredMixedProductsResponse> => {
+      const response = await apiClient.get<FilteredMixedProductsResponse>(
+        "/products/mixed/filtered",
+        {
+          params: {
+            filter,
+            page: pageParam,
+          },
+        }
+      );
+      return response.data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: FilteredMixedProductsResponse) => {
+      return lastPage.hasNextPage ? lastPage.page + 1 : undefined;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    ...options,
+  });
+};
+
+// ===================================
+// CATEGORY MIXED PRODUCTS (Infinite Scroll)
+// ===================================
+
+export const useCategoryMixedProducts = (
+  categoryId: string,
+  excludeProductId?: string,
+  options?: Omit<
+    UseInfiniteQueryOptions<CategoryMixedProductsResponse>,
+    "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
+  >
+) => {
+  return useInfiniteQuery({
+    queryKey: [
+      "products",
+      "category",
+      categoryId,
+      "mixed",
+      excludeProductId,
+    ] as const,
+    queryFn: async ({
+      pageParam = 1,
+    }): Promise<CategoryMixedProductsResponse> => {
+      const response = await apiClient.get<CategoryMixedProductsResponse>(
+        `/products/category/${categoryId}/mixed`,
+        {
+          params: {
+            page: pageParam,
+            ...(excludeProductId && { excludeProductId }),
+          },
+        }
+      );
+      return response.data;
+    },
+    enabled: !!categoryId,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: CategoryMixedProductsResponse) => {
       return lastPage.hasNextPage ? lastPage.page + 1 : undefined;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes

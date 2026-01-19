@@ -15,11 +15,18 @@ import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@components/SafeScreen";
 import ProductCard from "@components/ProductCard";
-import { useProductDetail, useSimilarProducts } from "@api/hooks/useProducts";
+import VerticalProductSection from "@components/VerticalProductSection";
+import {
+  useProductDetail,
+  useSimilarProducts,
+  useCategoryMixedProducts,
+} from "@api/hooks/useProducts";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
 import { calculateItemTotal, formatINR } from "@utils/pricing";
-import type { ProductVariant } from "@api/types";
+import type { ProductVariant, CategoryMixedProductsResponse } from "@api/types";
+import type { InfiniteData } from "@tanstack/react-query";
+import { useCartToast } from "@context/CartToastContext";
 
 const { width } = Dimensions.get("window");
 const IMAGE_WIDTH = width - 32;
@@ -35,6 +42,7 @@ export default function ProductDetailScreen() {
   const route = useRoute<RouteProp<RouteParams, "ProductDetail">>();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
+  const { showCartToast } = useCartToast();
 
   const { productId } = route.params;
   const { data, isLoading, isError, error } = useProductDetail(productId);
@@ -42,10 +50,9 @@ export default function ProductDetailScreen() {
 
   // State
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
+    null,
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
 
   // Cart state
   const cartItems = useAppSelector((s) => s.cart.items);
@@ -54,7 +61,7 @@ export default function ProductDetailScreen() {
   const isInCart = useMemo(() => {
     if (!selectedVariant) return false;
     return cartItems.some(
-      (item) => item.id === productId && item.variantId === selectedVariant._id
+      (item) => item.id === productId && item.variantId === selectedVariant._id,
     );
   }, [cartItems, productId, selectedVariant]);
 
@@ -74,6 +81,19 @@ export default function ProductDetailScreen() {
   } = useSimilarProducts(product?.categoryId || "", productId, {
     enabled: !!product?.categoryId,
   });
+
+  // Category mixed products for "Products you may like" section (Level 1)
+  const {
+    data: categoryMixedData,
+    isLoading: categoryMixedLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCategoryMixedProducts(
+    similarData?.level1Category?.categoryId || "",
+    productId,
+    { enabled: !!similarData?.level1Category?.categoryId },
+  );
 
   // Auto-select first variant on load
   React.useEffect(() => {
@@ -96,9 +116,10 @@ export default function ProductDetailScreen() {
       addToCart({
         id: productId,
         variantId: selectedVariant._id,
-        qty: quantity,
-      })
+        qty: 1,
+      }),
     );
+    showCartToast(product.name);
   };
 
   const handleBuyNow = () => {
@@ -109,23 +130,23 @@ export default function ProductDetailScreen() {
       addToCart({
         id: productId,
         variantId: selectedVariant._id,
-        qty: quantity,
-      })
+        qty: 1,
+      }),
     );
 
     // Navigate to checkout
     navigation.navigate("Checkout");
   };
 
-  // Calculate price
+  // Calculate price (always for qty 1)
   const priceInfo = useMemo(() => {
     if (!selectedVariant) return null;
     return calculateItemTotal(
       selectedVariant.sellingPrices,
-      quantity,
-      selectedVariant.mrp
+      1,
+      selectedVariant.mrp,
     );
-  }, [selectedVariant, quantity]);
+  }, [selectedVariant]);
 
   // Variant images
   const variantImages = useMemo(() => {
@@ -196,7 +217,7 @@ export default function ProductDetailScreen() {
               keyExtractor={(item, index) => `${item.publicId}-${index}`}
               onMomentumScrollEnd={(e) => {
                 const index = Math.round(
-                  e.nativeEvent.contentOffset.x / IMAGE_WIDTH
+                  e.nativeEvent.contentOffset.x / IMAGE_WIDTH,
                 );
                 setSelectedImageIndex(index);
               }}
@@ -266,7 +287,7 @@ export default function ProductDetailScreen() {
                     {Math.round(
                       ((selectedVariant!.mrp - priceInfo.pricePerUnit) /
                         selectedVariant!.mrp) *
-                        100
+                        100,
                     )}
                     % OFF
                   </Text>
@@ -284,13 +305,6 @@ export default function ProductDetailScreen() {
                   <Text style={styles.pricingTierText}>
                     Buy {tier.minQuantity}+ → ₹{tier.price.toFixed(0)}/piece
                   </Text>
-                  {quantity >= tier.minQuantity && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={16}
-                      color="#16A34A"
-                    />
-                  )}
                 </View>
               ))}
             </View>
@@ -353,61 +367,6 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
-          {/* Quantity */}
-          <View style={styles.quantitySection}>
-            <Text style={styles.variantLabel}>Quantity</Text>
-            <View style={styles.quantityControlsWrapper}>
-              <Pressable
-                onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                style={[
-                  styles.quantityBtn,
-                  (quantity === 1 || isOutOfStock) &&
-                    styles.quantityBtnDisabled,
-                ]}
-                disabled={quantity === 1 || isOutOfStock}
-              >
-                <Ionicons
-                  name="remove"
-                  size={22}
-                  color={quantity === 1 || isOutOfStock ? "#D1D5DB" : "#6366F1"}
-                />
-              </Pressable>
-              <View style={styles.quantityDisplay}>
-                <Text
-                  style={[
-                    styles.quantityText,
-                    isOutOfStock && styles.textDisabled,
-                  ]}
-                >
-                  {isOutOfStock ? 0 : quantity}
-                </Text>
-                <Text style={styles.quantityLabel}>items</Text>
-              </View>
-              <Pressable
-                onPress={() => {
-                  if (
-                    selectedVariant?.stock &&
-                    quantity >= selectedVariant.stock
-                  ) {
-                    return; // Max stock reached
-                  }
-                  setQuantity(quantity + 1);
-                }}
-                style={[
-                  styles.quantityBtn,
-                  isOutOfStock && styles.quantityBtnDisabled,
-                ]}
-                disabled={isOutOfStock}
-              >
-                <Ionicons
-                  name="add"
-                  size={22}
-                  color={isOutOfStock ? "#D1D5DB" : "#6366F1"}
-                />
-              </Pressable>
-            </View>
-          </View>
-
           {/* Description */}
           {product.description && (
             <View style={styles.descriptionSection}>
@@ -417,21 +376,20 @@ export default function ProductDetailScreen() {
           )}
         </View>
 
-        {/* Similar Products */}
-        {similarData &&
-          similarData.products &&
-          similarData.products.length > 0 && (
+        {/* Similar Products (Level 2 - Horizontal) */}
+        {similarData?.level2Products?.products &&
+          similarData.level2Products.products.length > 0 && (
             <View style={styles.similarSection}>
               <View style={styles.similarHeader}>
                 <Text style={styles.sectionTitle}>You May Also Like</Text>
                 <Text style={styles.similarCount}>
-                  {similarData.products.length} items
+                  {similarData.level2Products.products.length} items
                 </Text>
               </View>
               <FlatList
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                data={similarData.products}
+                data={similarData.level2Products.products}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => {
                   const firstVariant = item.variants?.[0];
@@ -491,8 +449,9 @@ export default function ProductDetailScreen() {
                                 id: item._id,
                                 variantId: firstVariant?._id,
                                 qty: 1,
-                              })
+                              }),
                             );
+                            showCartToast(item.name);
                           }}
                           style={styles.similarAddBtn}
                         >
@@ -511,6 +470,29 @@ export default function ProductDetailScreen() {
               />
             </View>
           )}
+
+        {/* Products You May Like Section */}
+        <VerticalProductSection
+          title="Products you may like in this category"
+          products={
+            (
+              categoryMixedData as
+                | InfiniteData<CategoryMixedProductsResponse>
+                | undefined
+            )?.pages?.flatMap((page) => page.products) || []
+          }
+          isLoading={categoryMixedLoading}
+          isFetchingNextPage={isFetchingNextPage}
+          hasNextPage={hasNextPage}
+          onLoadMore={() => fetchNextPage()}
+          onProductPress={(id) =>
+            navigation.push("ProductDetail", { productId: id })
+          }
+          onAddToCart={(productId, variantId, productName) => {
+            dispatch(addToCart({ id: productId, variantId, qty: 1 }));
+            if (productName) showCartToast(productName);
+          }}
+        />
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -539,8 +521,8 @@ export default function ProductDetailScreen() {
             {isOutOfStock
               ? "Out of Stock"
               : isInCart
-              ? "In Cart"
-              : "Add to Cart"}
+                ? "In Cart"
+                : "Add to Cart"}
           </Text>
         </Pressable>
 

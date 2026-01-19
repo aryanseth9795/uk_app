@@ -9,7 +9,6 @@ import {
   Pressable,
   Keyboard,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { FlashList } from "@shopify/flash-list";
@@ -35,6 +34,7 @@ import {
 import type { SearchFilters, MixedProductsResponse } from "@api/types";
 import { getPriceForQuantity } from "@utils/pricing";
 import type { InfiniteData } from "@tanstack/react-query";
+import { useCartToast } from "@context/CartToastContext";
 
 // ===================================
 // HOME SCREEN COMPONENT
@@ -43,6 +43,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const navigation = useNavigation<any>();
+  const { showCartToast } = useCartToast();
 
   // UI State
   const [query, setQuery] = useState("");
@@ -80,14 +81,14 @@ export default function HomeScreen() {
     () => ({
       q: activeQuery || undefined,
     }),
-    [activeQuery]
+    [activeQuery],
   );
 
   const { data: searchData, isLoading: searchLoading } = useSearchProducts(
     searchFilters,
     {
       enabled: !!activeQuery,
-    }
+    },
   );
 
   // Search suggestions
@@ -101,7 +102,7 @@ export default function HomeScreen() {
     const { products = [], brands = [] } = suggestionsData.suggestions || {};
     return [...products.map((p) => p.name), ...brands.map((b) => b.name)].slice(
       0,
-      5
+      5,
     );
   }, [suggestionsData]);
 
@@ -144,7 +145,7 @@ export default function HomeScreen() {
       navigation.navigate("SearchResults", { query: label });
       setQuery("");
     },
-    [navigation]
+    [navigation],
   );
 
   const clearSearch = useCallback(() => {
@@ -172,7 +173,7 @@ export default function HomeScreen() {
           image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
           variantCount: p.variants?.length || 0,
         };
-      })
+      }),
     );
   }, [mixedData]);
 
@@ -201,14 +202,14 @@ export default function HomeScreen() {
         navigation.navigate("QuickAccess", { filterType });
       }
     },
-    [navigation]
+    [navigation],
   );
 
   const handleMorePress = useCallback(
     (categoryId: string, categoryName: string) => {
       navigation.navigate("CategoryProducts", { categoryId, categoryName });
     },
-    [navigation]
+    [navigation],
   );
 
   // Removed static SLIDES - now using dynamic banners from API
@@ -326,11 +327,7 @@ export default function HomeScreen() {
             }}
             onAdd={() => {
               dispatch(addToCart({ id: item.id, variantId: item.variantId }));
-              Alert.alert(
-                "Added to Cart",
-                `${item.title} has been added to your cart`,
-                [{ text: "OK" }]
-              );
+              showCartToast(item.title);
             }}
             onPress={() =>
               navigation.navigate("ProductDetail", { productId: item.id })
@@ -339,7 +336,7 @@ export default function HomeScreen() {
         </View>
       );
     },
-    [dispatch, navigation]
+    [dispatch, navigation],
   );
 
   // ===================================
@@ -412,7 +409,7 @@ export default function HomeScreen() {
               const firstVariant = p.variants?.[0];
               const price = getPriceForQuantity(
                 firstVariant?.sellingPrices || [],
-                1
+                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -430,17 +427,10 @@ export default function HomeScreen() {
             onPressProduct={(id) =>
               navigation.navigate("ProductDetail", { productId: id })
             }
-            onAddToCart={(id, variantId) => {
-              const product = category.products.find(
-                (p: any) => String(p._id) === id
-              );
+            onAddToCart={(id, variantId, productName) => {
               dispatch(addToCart({ id, variantId }));
-              if (product) {
-                Alert.alert(
-                  "Added to Cart",
-                  `${product.name} has been added to your cart`,
-                  [{ text: "OK" }]
-                );
+              if (productName) {
+                showCartToast(productName);
               }
             }}
           />

@@ -13,14 +13,23 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 // Components
 import SafeScreen from "@components/SafeScreen";
 import CategorySection from "@components/CategorySection";
+import VerticalProductSection from "@components/VerticalProductSection";
 
 // Hooks
 import { useAppDispatch } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
-import { useFilteredLandingProducts, FilterType } from "@api/hooks/useProducts";
+import {
+  useFilteredLandingProducts,
+  useFilteredMixedProducts,
+  FilterType,
+  MixedFilterType,
+} from "@api/hooks/useProducts";
 import { getPriceForQuantity } from "@utils/pricing";
+import type { FilteredMixedProductsResponse } from "@api/types";
+import type { InfiniteData } from "@tanstack/react-query";
+import { useCartToast } from "@context/CartToastContext";
 
-// Filter type mapping
+// Filter type mapping for display titles
 const FILTER_TITLES: Record<FilterType, string> = {
   isTopDiscount: "Top Discounts",
   isLatestProduct: "Latest Products",
@@ -28,22 +37,41 @@ const FILTER_TITLES: Record<FilterType, string> = {
   topSeller: "Top Products",
 };
 
+// Map FilterType to MixedFilterType for the API
+const FILTER_TYPE_TO_MIXED: Record<FilterType, MixedFilterType> = {
+  isTopDiscount: "topDiscount",
+  isLatestProduct: "newest",
+  isCheap: "cheapest",
+  topSeller: "topSeller",
+};
+
 export default function QuickAccessScreen() {
   const dispatch = useAppDispatch();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { showCartToast } = useCartToast();
 
   // Get filter type from route params
   const filterType: FilterType = route.params?.filterType || "isTopDiscount";
   const title = FILTER_TITLES[filterType] || "Filtered Products";
+  const mixedFilterType = FILTER_TYPE_TO_MIXED[filterType];
 
-  // Fetch filtered products
+  // Fetch filtered products for horizontal sections
   const {
     data: filteredData,
     isLoading,
     error,
     refetch,
   } = useFilteredLandingProducts(filterType);
+
+  // Fetch mixed products for vertical section (infinite scroll)
+  const {
+    data: mixedData,
+    isLoading: mixedLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useFilteredMixedProducts(mixedFilterType);
 
   // Event handlers
   const onRefresh = useCallback(async () => {
@@ -54,7 +82,7 @@ export default function QuickAccessScreen() {
     (categoryId: string, categoryName: string) => {
       navigation.navigate("CategoryProducts", { categoryId, categoryName });
     },
-    [navigation]
+    [navigation],
   );
 
   // Error handling
@@ -104,7 +132,7 @@ export default function QuickAccessScreen() {
               const firstVariant = p.variants?.[0];
               const price = getPriceForQuantity(
                 firstVariant?.sellingPrices || [],
-                1
+                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -114,7 +142,7 @@ export default function QuickAccessScreen() {
                 title: String(p.name || ""),
                 price: price,
                 mrp: mrp,
-                image: String(p.thumbnail?.secureUrl  || ""),
+                image: String(p.thumbnail?.secureUrl || ""),
                 variantCount: p.variants?.length || 0,
               };
             })}
@@ -122,9 +150,10 @@ export default function QuickAccessScreen() {
             onPressProduct={(id) =>
               navigation.navigate("ProductDetail", { productId: id })
             }
-            onAddToCart={(id, variantId) =>
-              dispatch(addToCart({ id, variantId }))
-            }
+            onAddToCart={(id, variantId, productName) => {
+              dispatch(addToCart({ id, variantId }));
+              if (productName) showCartToast(productName);
+            }}
           />
         ))}
 
@@ -134,6 +163,31 @@ export default function QuickAccessScreen() {
             <Text style={styles.emptyText}>No products available</Text>
           </View>
         )}
+
+        {/* Vertical Products Section with Pagination */}
+        <VerticalProductSection
+          title={`More ${title}`}
+          products={
+            (
+              mixedData as
+                | InfiniteData<FilteredMixedProductsResponse>
+                | undefined
+            )?.pages?.flatMap((page) => page.products) || []
+          }
+          isLoading={mixedLoading}
+          isFetchingNextPage={isFetchingNextPage}
+          hasNextPage={hasNextPage}
+          onLoadMore={() => fetchNextPage()}
+          onProductPress={(id) =>
+            navigation.navigate("ProductDetail", { productId: id })
+          }
+          onAddToCart={(id, variantId, productName) => {
+            dispatch(addToCart({ id, variantId }));
+            if (productName) showCartToast(productName);
+          }}
+        />
+
+        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeScreen>
   );

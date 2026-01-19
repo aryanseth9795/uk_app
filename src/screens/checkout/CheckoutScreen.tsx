@@ -14,22 +14,26 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@components/SafeScreen";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
-import { clearCart } from "@store/slices/cartSlice";
+import { clearCart, updateQty, removeFromCart } from "@store/slices/cartSlice";
 import { useProductDetail } from "@api/hooks/useProducts";
 import { useCreateOrder } from "@api/hooks/useOrders";
 import { calculateItemTotal } from "@utils/pricing";
 
-// Order Item Component
+// Order Item Component with Quantity Selector
 const OrderItem = ({
   id,
   variantId,
   qty,
   onItemCalculated,
+  onQtyChange,
+  onRemove,
 }: {
   id: string;
   variantId: string;
   qty: number;
   onItemCalculated?: (data: any) => void;
+  onQtyChange?: (id: string, variantId: string, newQty: number) => void;
+  onRemove?: (id: string, variantId: string) => void;
 }) => {
   const { data: productData, isLoading } = useProductDetail(id);
 
@@ -66,6 +70,21 @@ const OrderItem = ({
 
   const priceCalc = calculateItemTotal(variant.sellingPrices, qty, variant.mrp);
   const itemTotal = priceCalc.total;
+  const maxStock = variant.stock ?? 999;
+
+  const handleDecrement = () => {
+    if (qty <= 1) {
+      onRemove?.(id, variantId);
+    } else {
+      onQtyChange?.(id, variantId, qty - 1);
+    }
+  };
+
+  const handleIncrement = () => {
+    if (qty < maxStock) {
+      onQtyChange?.(id, variantId, qty + 1);
+    }
+  };
 
   return (
     <View style={styles.orderItem}>
@@ -89,7 +108,28 @@ const OrderItem = ({
             {variant.size && `${variant.size}`}
           </Text>
         )}
-        <Text style={styles.orderItemQty}>Qty: {qty}</Text>
+        {/* Quantity Controls */}
+        <View style={styles.qtyControls}>
+          <Pressable onPress={handleDecrement} style={styles.qtyBtn}>
+            <Ionicons
+              name={qty <= 1 ? "trash-outline" : "remove"}
+              size={16}
+              color={qty <= 1 ? "#EF4444" : "#6366F1"}
+            />
+          </Pressable>
+          <Text style={styles.qtyText}>{qty}</Text>
+          <Pressable
+            onPress={handleIncrement}
+            style={[styles.qtyBtn, qty >= maxStock && styles.qtyBtnDisabled]}
+            disabled={qty >= maxStock}
+          >
+            <Ionicons
+              name="add"
+              size={16}
+              color={qty >= maxStock ? "#D1D5DB" : "#6366F1"}
+            />
+          </Pressable>
+        </View>
       </View>
       <Text style={styles.orderItemTotal}>₹{itemTotal.toFixed(0)}</Text>
     </View>
@@ -147,11 +187,47 @@ export default function CheckoutScreen() {
           i.variantId === itemData.variantId
       );
       if (existing) {
+        // Update quantity if changed
+        if (existing.quantity !== itemData.quantity) {
+          return prev.map((i) =>
+            i.productId === itemData.productId &&
+            i.variantId === itemData.variantId
+              ? { ...i, quantity: itemData.quantity }
+              : i
+          );
+        }
         return prev;
       }
       return [...prev, itemData];
     });
     itemsProcessed.current += 1;
+  };
+
+  // Handle quantity change
+  const handleQtyChange = (
+    productId: string,
+    variantId: string,
+    newQty: number
+  ) => {
+    dispatch(updateQty({ id: productId, variantId, qty: newQty }));
+    setOrderItems((prev) =>
+      prev.map((item) =>
+        item.productId === productId && item.variantId === variantId
+          ? { ...item, quantity: newQty }
+          : item
+      )
+    );
+  };
+
+  // Handle item removal
+  const handleRemoveItem = (productId: string, variantId: string) => {
+    dispatch(removeFromCart({ id: productId, variantId }));
+    setOrderItems((prev) =>
+      prev.filter(
+        (item) =>
+          !(item.productId === productId && item.variantId === variantId)
+      )
+    );
   };
 
   const handlePlaceOrder = () => {
@@ -331,6 +407,8 @@ export default function CheckoutScreen() {
               variantId={item.variantId}
               qty={item.qty}
               onItemCalculated={handleItemCalculated}
+              onQtyChange={handleQtyChange}
+              onRemove={handleRemoveItem}
             />
           ))}
         </View>
@@ -519,9 +597,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
   },
-  orderItemQty: {
-    fontSize: 12,
-    color: "#6B7280",
+  // Quantity control styles
+  qtyControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+  },
+  qtyBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qtyBtnDisabled: {
+    opacity: 0.4,
+  },
+  qtyText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1F2937",
+    minWidth: 24,
+    textAlign: "center",
   },
   orderItemTotal: {
     fontSize: 15,

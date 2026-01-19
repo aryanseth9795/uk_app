@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Pressable,
   Dimensions,
-  Alert,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 // import { FlashList } from "@shopify/flash-list";
@@ -21,6 +20,7 @@ import { useAppDispatch } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
 import { useSearchProducts } from "@api/hooks";
 import { getPriceForQuantity } from "@utils/pricing";
+import { useCartToast } from "@context/CartToastContext";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2; // 2 columns with padding
@@ -35,6 +35,7 @@ export default function SearchResultsScreen() {
   const route = useRoute<RouteProp<RouteParams, "SearchResults">>();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
+  const { showCartToast } = useCartToast();
 
   const { query } = route.params;
 
@@ -132,9 +133,9 @@ export default function SearchResultsScreen() {
         id: item.id,
         variantId: item.variantId,
         qty: 1,
-      })
+      }),
     );
-    Alert.alert("Success", "Product added to cart!");
+    showCartToast(item.title);
   };
 
   // Results

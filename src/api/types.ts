@@ -218,10 +218,27 @@ export type ProductDetailResponse = {
 
 export type SimilarProductsResponse = {
   success: true;
-  categoryId: string;
-  categoryName: string;
-  totalProducts: number;
-  products: Product[];
+  level2Category: {
+    categoryId: string;
+    categoryName: string;
+  };
+  level1Category: {
+    categoryId: string;
+    categoryName: string;
+  };
+  level2Products: {
+    total: number;
+    products: Product[];
+  };
+  level1Products: {
+    total: number;
+    products: Product[];
+  };
+  // Legacy fields for backwards compatibility
+  categoryId?: string;
+  categoryName?: string;
+  totalProducts?: number;
+  products?: Product[];
 };
 
 export type SearchFilters = {
@@ -306,6 +323,34 @@ export type MixedProductsResponse = {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   data: Product[];
+};
+
+// Filtered Mixed Products Response (for QuickAccess screen)
+export type FilteredMixedProductsResponse = {
+  success: true;
+  filter: string;
+  page: number;
+  limit: number;
+  totalProducts: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  products: Product[];
+};
+
+// Category Mixed Products Response (for Category/ProductDetail screens)
+export type CategoryMixedProductsResponse = {
+  success: true;
+  categoryId: string;
+  categoryName: string;
+  level: number;
+  page: number;
+  limit: number;
+  totalProducts: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  products: Product[];
 };
 
 // ===================================

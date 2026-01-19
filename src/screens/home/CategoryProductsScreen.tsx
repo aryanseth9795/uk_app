@@ -17,12 +17,16 @@ import { FlashList } from "@shopify/flash-list";
 import SafeScreen from "@components/SafeScreen";
 import ProductCard from "@components/ProductCard";
 import CategorySection from "@components/CategorySection";
+import VerticalProductSection from "@components/VerticalProductSection";
 
 // Hooks
 import { useAppDispatch } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
-import { useCategoryProducts } from "@api/hooks";
+import { useCategoryProducts, useCategoryMixedProducts } from "@api/hooks";
 import { getPriceForQuantity } from "@utils/pricing";
+import type { CategoryMixedProductsResponse } from "@api/types";
+import type { InfiniteData } from "@tanstack/react-query";
+import { useCartToast } from "@context/CartToastContext";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2; // 2 columns with padding
@@ -38,12 +42,22 @@ export default function CategoryProductsScreen() {
   const route = useRoute<RouteProp<RouteParams, "CategoryProducts">>();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
+  const { showCartToast } = useCartToast();
 
   const { categoryId, categoryName } = route.params;
 
   // Fetch category products
   const { data, isLoading, error, refetch, isRefetching } =
     useCategoryProducts(categoryId);
+
+  // Fetch mixed products for vertical section (infinite scroll)
+  const {
+    data: mixedData,
+    isLoading: mixedLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useCategoryMixedProducts(categoryId);
 
   // Handlers
   const onRefresh = useCallback(async () => {
@@ -57,21 +71,22 @@ export default function CategoryProductsScreen() {
         categoryName: subCategoryName,
       });
     },
-    [navigation]
+    [navigation],
   );
 
   const handleProductPress = useCallback(
     (productId: string) => {
       navigation.navigate("ProductDetail", { productId });
     },
-    [navigation]
+    [navigation],
   );
 
   const handleAddToCart = useCallback(
-    (productId: string, variantId: string) => {
+    (productId: string, variantId: string, productName?: string) => {
       dispatch(addToCart({ id: productId, variantId, qty: 1 }));
+      if (productName) showCartToast(productName);
     },
-    [dispatch]
+    [dispatch, showCartToast],
   );
 
   // Header component
@@ -190,7 +205,7 @@ export default function CategoryProductsScreen() {
               const firstVariant = p.variants?.[0];
               const price = getPriceForQuantity(
                 firstVariant?.sellingPrices || [],
-                1
+                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -217,6 +232,26 @@ export default function CategoryProductsScreen() {
               />
             );
           })}
+
+          {/* Vertical Products Section with Pagination */}
+          <VerticalProductSection
+            title="More Products"
+            products={
+              (
+                mixedData as
+                  | InfiniteData<CategoryMixedProductsResponse>
+                  | undefined
+              )?.pages?.flatMap((page) => page.products) || []
+            }
+            isLoading={mixedLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
+            onLoadMore={() => fetchNextPage()}
+            onProductPress={handleProductPress}
+            onAddToCart={handleAddToCart}
+          />
+
+          <View style={{ height: 24 }} />
         </ScrollView>
       )}
     </SafeScreen>
