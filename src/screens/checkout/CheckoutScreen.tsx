@@ -18,6 +18,7 @@ import { clearCart, updateQty, removeFromCart } from "@store/slices/cartSlice";
 import { useProductDetail } from "@api/hooks/useProducts";
 import { useCreateOrder } from "@api/hooks/useOrders";
 import { calculateItemTotal } from "@utils/pricing";
+import OrderSuccessAnimation from "@components/OrderSuccessAnimation";
 
 // Order Item Component with Quantity Selector
 const OrderItem = ({
@@ -45,7 +46,7 @@ const OrderItem = ({
       const priceCalc = calculateItemTotal(
         variant.sellingPrices,
         qty,
-        variant.mrp
+        variant.mrp,
       );
       onItemCalculated({
         productId: id,
@@ -146,6 +147,10 @@ export default function CheckoutScreen() {
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const itemsProcessed = useRef(0);
 
+  // Order success animation state
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState("");
+
   const { mutate: createOrder, isPending: isPlacingOrder } = useCreateOrder();
 
   // Calculate totals from order items
@@ -184,7 +189,7 @@ export default function CheckoutScreen() {
       const existing = prev.find(
         (i) =>
           i.productId === itemData.productId &&
-          i.variantId === itemData.variantId
+          i.variantId === itemData.variantId,
       );
       if (existing) {
         // Update quantity if changed
@@ -193,7 +198,7 @@ export default function CheckoutScreen() {
             i.productId === itemData.productId &&
             i.variantId === itemData.variantId
               ? { ...i, quantity: itemData.quantity }
-              : i
+              : i,
           );
         }
         return prev;
@@ -207,15 +212,15 @@ export default function CheckoutScreen() {
   const handleQtyChange = (
     productId: string,
     variantId: string,
-    newQty: number
+    newQty: number,
   ) => {
     dispatch(updateQty({ id: productId, variantId, qty: newQty }));
     setOrderItems((prev) =>
       prev.map((item) =>
         item.productId === productId && item.variantId === variantId
           ? { ...item, quantity: newQty }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -225,8 +230,8 @@ export default function CheckoutScreen() {
     setOrderItems((prev) =>
       prev.filter(
         (item) =>
-          !(item.productId === productId && item.variantId === variantId)
-      )
+          !(item.productId === productId && item.variantId === variantId),
+      ),
     );
   };
 
@@ -262,39 +267,35 @@ export default function CheckoutScreen() {
     createOrder(orderData, {
       onSuccess: (response) => {
         dispatch(clearCart());
-        Alert.alert(
-          "Order Placed Successfully!",
-          `Order ID: ${response.order._id}`,
-          [
-            {
-              text: "View Orders",
-              onPress: () => {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: "Tabs" }],
-                });
-                navigation.navigate("AllOrders");
-              },
-            },
-            {
-              text: "Continue Shopping",
-              onPress: () => {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: "Tabs" }],
-                });
-              },
-            },
-          ]
-        );
+        // Show order success animation instead of Alert
+        setSuccessOrderId(response.order._id);
+        setShowOrderSuccess(true);
       },
       onError: (error: any) => {
         Alert.alert(
           "Order Failed",
           error?.response?.data?.message ||
-            "Failed to place order. Please try again."
+            "Failed to place order. Please try again.",
         );
       },
+    });
+  };
+
+  // Order success animation handlers
+  const handleViewOrders = () => {
+    setShowOrderSuccess(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Tabs" }],
+    });
+    navigation.navigate("AllOrders");
+  };
+
+  const handleContinueShopping = () => {
+    setShowOrderSuccess(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Tabs" }],
     });
   };
 
@@ -481,6 +482,14 @@ export default function CheckoutScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Order Success Animation */}
+      <OrderSuccessAnimation
+        visible={showOrderSuccess}
+        orderId={successOrderId}
+        onViewOrders={handleViewOrders}
+        onContinueShopping={handleContinueShopping}
+      />
     </SafeScreen>
   );
 }
