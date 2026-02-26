@@ -28,7 +28,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ mobile?: string; password?: string }>(
-    {}
+    {},
   );
 
   const { mutate: login, isPending: isLoading } = useLogin();
@@ -77,7 +77,7 @@ export default function LoginScreen() {
               addresses: [],
               createdAt: "",
               updatedAt: "",
-            })
+            }),
           );
 
           // Register for push notifications
@@ -103,10 +103,10 @@ export default function LoginScreen() {
           Alert.alert(
             "Login Failed",
             error?.response?.data?.message ||
-              "Invalid credentials. Please try again."
+              "Invalid credentials. Please try again.",
           );
         },
-      }
+      },
     );
   };
 
@@ -227,6 +227,14 @@ export default function LoginScreen() {
               ) : (
                 <Text style={styles.loginButtonText}>Login</Text>
               )}
+            </Pressable>
+
+            {/* Forgot Password */}
+            <Pressable
+              onPress={() => navigation.navigate("ForgotPassword")}
+              style={styles.forgotPasswordContainer}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </Pressable>
 
             {/* Divider */}
@@ -358,5 +366,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#8366CC",
+  },
+  forgotPasswordContainer: {
+    alignItems: "center",
+    marginTop: -4,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: "#8366CC",
+    fontWeight: "700",
   },
 });

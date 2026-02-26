@@ -1,5 +1,5 @@
 // AccountScreen - User Profile and Quick Actions
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useUserProfile } from "@api/hooks/useUser";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRemoveExpoToken } from "@api/hooks/useNotifications";
 import { unregisterPushNotifications } from "@services/notificationService";
+import EmailVerifyModal from "@components/EmailVerifyModal";
 
 // Get initials from name
 const getInitials = (name: string): string => {
@@ -82,7 +83,13 @@ export default function AccountScreen() {
 
   const userData = profileData?.user || user;
 
-  // Debug logging
+  // Show email modal for authenticated users without a verified email
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && userData && !userData.email) {
+      setShowEmailModal(true);
+    }
+  }, [isAuthenticated, isLoading, userData]);
 
   // Unauthenticated state (check this FIRST for instant response)
   if (!isAuthenticated) {
@@ -136,6 +143,11 @@ export default function AccountScreen() {
 
   return (
     <SafeScreen>
+      {/* Email Verification Modal for users without email */}
+      <EmailVerifyModal
+        visible={showEmailModal}
+        onDismiss={() => setShowEmailModal(false)}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

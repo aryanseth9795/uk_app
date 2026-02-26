@@ -282,6 +282,7 @@ import AccountScreen from "@/screens/account/AccountScreen";
 import ProductDetailScreen from "@/screens/product/ProductDetailScreen";
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignupScreen from "../screens/auth/SignupScreen";
+import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
 import RegisterScreen from "@/screens/auth/RegisterScreen";
 
 import AuthGate from "@components/AuthGate";
@@ -301,7 +302,7 @@ const Stack = createNativeStackNavigator();
 
 const CartIcon = ({ color, size }: { color: string; size: number }) => {
   const count = useAppSelector((s) =>
-    s.cart.items.reduce((n, i) => n + i.qty, 0)
+    s.cart.items.reduce((n, i) => n + i.qty, 0),
   );
   return (
     <View>
@@ -338,7 +339,7 @@ function Tabs() {
         headerShown: false,
         tabBarActiveTintColor: "#8366CC",
         tabBarStyle: {
-          height: 48 + insets.bottom+15,
+          height: 48 + insets.bottom + 15,
           paddingBottom: Math.max(12, insets.bottom),
           paddingTop: 4,
         },
@@ -416,6 +417,11 @@ export default function RootNavigator() {
         name="Signup"
         component={SignupScreen}
         options={{ title: "Sign Up" }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ title: "Forgot Password" }}
       />
     </Stack.Navigator>
   );

@@ -42,6 +42,66 @@ export type RegisterResponse = {
   message: string;
 };
 
+// Email OTP — Send OTP
+export type SendEmailOtpRequest = {
+  email: string;
+};
+
+export type SendEmailOtpResponse = {
+  success: true;
+  message: string;
+};
+
+// Email OTP — New user signup with email verification
+export type VerifyAndRegisterRequest = {
+  name: string;
+  mobilenumber: string;
+  password: string;
+  email: string;
+  otp: string;
+};
+
+export type VerifyAndRegisterResponse = {
+  success: true;
+  message: string;
+};
+
+// Email OTP — Add email to existing authenticated user
+export type AddEmailRequest = {
+  email: string;
+  otp: string;
+};
+
+export type AddEmailResponse = {
+  success: true;
+  message: string;
+  user: User;
+};
+
+// Forgot Password — Send OTP
+export type ForgotPasswordSendOtpRequest = {
+  mobilenumber: string;
+  email: string;
+};
+
+export type ForgotPasswordSendOtpResponse = {
+  success: true;
+  message: string;
+};
+
+// Forgot Password — Reset
+export type ResetPasswordRequest = {
+  mobilenumber: string;
+  email: string;
+  otp: string;
+  newPassword: string;
+};
+
+export type ResetPasswordResponse = {
+  success: true;
+  message: string;
+};
+
 export type RefreshTokenRequest = {
   refresh_token: string;
 };
@@ -72,6 +132,8 @@ export type User = {
   _id: string;
   name: string;
   mobilenumber: string;
+  email?: string;
+  email_verified?: boolean;
   role: string;
   addresses: Address[];
   createdAt: string;
