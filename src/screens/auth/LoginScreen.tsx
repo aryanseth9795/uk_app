@@ -16,8 +16,9 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@components/SafeScreen";
 import { useLogin } from "@api/hooks/useAuth";
+import { getErrorMessage } from "@api/client";
 import { useAppDispatch } from "@store/hooks";
-import { setUser } from "@store/slices/authSlice";
+import { setAuthenticated } from "@store/slices/authSlice";
 import { useRegisterExpoToken } from "@api/hooks/useNotifications";
 import { registerForPushNotifications } from "@services/notificationService";
 
@@ -67,18 +68,13 @@ export default function LoginScreen() {
       },
       {
         onSuccess: async (response) => {
-          // Store user in Redux
-          dispatch(
-            setUser({
-              _id: "",
-              name: "",
-              mobilenumber: mobileNumber.trim(),
-              role: "user",
-              addresses: [],
-              createdAt: "",
-              updatedAt: "",
-            }),
-          );
+          // Only flip the auth flag. The login response carries tokens, not
+          // a user, and inventing one to satisfy the type put an object with
+          // _id "" and an empty addresses array into the store -- which matters
+          // here because checkout opens straight into address selection and
+          // would show an empty list to a user who has three. AuthInitializer
+          // fetches the real profile once this is true (CA-05).
+          dispatch(setAuthenticated(true));
 
           // Register for push notifications
           try {
@@ -99,12 +95,10 @@ export default function LoginScreen() {
             },
           ]);
         },
-        onError: (error: any) => {
-          Alert.alert(
-            "Login Failed",
-            error?.response?.data?.message ||
-              "Invalid credentials. Please try again.",
-          );
+        onError: (error: unknown) => {
+          // Routed through getErrorMessage so rate-limit responses get their
+          // own copy instead of a misleading "Login Failed" (CA-04).
+          Alert.alert("Login Failed", getErrorMessage(error));
         },
       },
     );

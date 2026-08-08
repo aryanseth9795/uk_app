@@ -144,7 +144,6 @@ export default function ProductDetailScreen() {
     return calculateItemTotal(
       selectedVariant.sellingPrices,
       1,
-      selectedVariant.mrp,
     );
   }, [selectedVariant]);
 
@@ -276,16 +275,19 @@ export default function ProductDetailScreen() {
           {priceInfo && (
             <View style={styles.priceContainer}>
               <Text style={styles.sellingPrice}>
-                ₹{priceInfo.pricePerUnit.toFixed(0)}
+                {priceInfo.pricePerUnit === null
+                  ? "Price unavailable"
+                  : `₹${priceInfo.pricePerUnit.toFixed(0)}`}
               </Text>
-              {priceInfo.pricePerUnit < selectedVariant!.mrp && (
+              {priceInfo.pricePerUnit !== null &&
+                priceInfo.pricePerUnit < selectedVariant!.mrp && (
                 <>
                   <Text style={styles.mrp}>
                     ₹{selectedVariant!.mrp.toFixed(0)}
                   </Text>
                   <Text style={styles.discount}>
                     {Math.round(
-                      ((selectedVariant!.mrp - priceInfo.pricePerUnit) /
+                      ((selectedVariant!.mrp - priceInfo.pricePerUnit!) /
                         selectedVariant!.mrp) *
                         100,
                     )}

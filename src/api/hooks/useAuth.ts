@@ -1,9 +1,9 @@
 // Authentication Hooks using TanStack Query
 import { useMutation } from "@tanstack/react-query";
 import { useAppDispatch } from "@store/hooks";
-import { logout as logoutAction } from "@store/slices/authSlice";
 import apiClient, { getErrorMessage } from "../client";
-import { saveTokens, clearTokens } from "@services/tokenStorage";
+import { saveTokens } from "@services/tokenStorage";
+import { performLogout } from "@utils/auth";
 import type {
   LoginRequest,
   LoginResponse,
@@ -109,8 +109,10 @@ export const useLogout = () => {
   const dispatch = useAppDispatch();
 
   return () => {
-    dispatch(logoutAction());
-    clearTokens();
+    // performLogout clears tokens, resets Redux AND purges the query cache.
+    // The previous two-step version left the last user's cached profile and
+    // orders in place for whoever signed in next (CA-08).
+    void performLogout();
   };
 };
 

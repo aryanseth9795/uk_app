@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import apiClient, { getErrorMessage } from "../client";
+import apiClient, { getErrorMessage, TOKEN_BASE_URL } from "../client";
 
 interface RegisterTokenPayload {
   expoToken: string;
@@ -48,10 +48,11 @@ interface GetTokensResponse {
 export const useRegisterExpoToken = () => {
   return useMutation<TokenResponse, Error, RegisterTokenPayload>({
     mutationFn: async (payload) => {
-      // Token endpoint is at /api/v1/token/expo (not under /user)
-      // Since base URL is /api/v1/user, we go up with /../token/expo
+      // Absolute URL, derived from TOKEN_BASE_URL. The previous
+      // "/../token/expo" climbed out of the /user base URL and only resolved
+      // correctly by accident of URL normalization (CA-10).
       const response = await apiClient.post<TokenResponse>(
-        "/../token/expo",
+        `${TOKEN_BASE_URL}/expo`,
         payload
       );
       return response.data;
@@ -71,8 +72,7 @@ export const useRegisterExpoToken = () => {
 export const useRemoveExpoToken = () => {
   return useMutation<TokenResponse, Error, RemoveTokenPayload>({
     mutationFn: async (payload) => {
-      // Token endpoint is at /api/v1/token/expo (not under /user)
-      const response = await apiClient.delete<TokenResponse>("/../token/expo", {
+      const response = await apiClient.delete<TokenResponse>(`${TOKEN_BASE_URL}/expo`, {
         data: payload,
       });
       return response.data;
@@ -93,8 +93,7 @@ export const useGetExpoTokens = () => {
   return useQuery<GetTokensResponse, Error>({
     queryKey: ["expo-tokens"],
     queryFn: async () => {
-      // Token endpoint is at /api/v1/token/expo (not under /user)
-      const response = await apiClient.get<GetTokensResponse>("/../token/expo");
+      const response = await apiClient.get<GetTokensResponse>(`${TOKEN_BASE_URL}/expo`);
       return response.data;
     },
     enabled: false, // Only run when explicitly called

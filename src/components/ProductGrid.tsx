@@ -78,7 +78,14 @@ import { View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import ProductCard from './ProductCard';
 
-type Item = { id: string; title: string; price: number; mrp: number; image: string };
+type Item = {
+  id: string;
+  title: string;
+  /** null when no price tier applies — see utils/pricing.ts (CA-02). */
+  price: number | null;
+  mrp: number | null;
+  image: string;
+};
 type Props = {
   data: Item[];
   onAdd: (id: string) => void;

@@ -1,5 +1,5 @@
 // OrderDetailScreen - Display detailed order information with cancel option
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@components/SafeScreen";
 import { useCancelOrder, useOrderDetail } from "@api/hooks/useOrders";
+import OrderStatusTimeline from "@components/orders/OrderStatusTimeline";
+import { downloadInvoicePdf, InvoiceNotReadyError } from "@api/invoiceApi";
 
 // Format price in INR
 const formatPrice = (price: number | undefined) => {
@@ -54,6 +56,7 @@ export default function OrderDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { mutate: cancelOrder, isPending: isCanceling } = useCancelOrder();
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   const orderId = route.params?.order?._id || route.params?.order?.orderId;
 
@@ -111,6 +114,33 @@ export default function OrderDetailScreen() {
 
   const statusColor = getStatusColor(order.status);
   const canCancel = order.status.toLowerCase() === "placed";
+  const statusHistory = (order as any).statusHistory as
+    | { status: string; timestamp?: string }[]
+    | undefined;
+
+  const handleViewInvoice = () => {
+    navigation.navigate("Invoice", { orderId: order._id });
+  };
+
+  const handleDownloadInvoice = async () => {
+    try {
+      setDownloadingInvoice(true);
+      await downloadInvoicePdf(order._id);
+    } catch (err) {
+      if (err instanceof InvoiceNotReadyError) {
+        Alert.alert("Invoice not ready", err.message);
+      } else {
+        Alert.alert(
+          "Download failed",
+          err instanceof Error
+            ? err.message
+            : "Could not download the invoice. Please try again."
+        );
+      }
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
 
   const handleCancelOrder = () => {
     Alert.alert("Cancel Order", "Are you sure you want to cancel this order?", [
@@ -176,6 +206,48 @@ export default function OrderDetailScreen() {
             <Text style={styles.orderIdLabel}>Order ID:</Text>
             <Text style={styles.orderIdValue}>#{orderId || "N/A"}</Text>
           </View>
+        </View>
+
+        {/* Order Status Timeline */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Status</Text>
+          <View style={styles.timelineCard}>
+            <OrderStatusTimeline
+              currentStatus={order.status}
+              statusHistory={statusHistory}
+            />
+          </View>
+        </View>
+
+        {/* Invoice Actions */}
+        <View style={styles.invoiceRow}>
+          <Pressable
+            style={[styles.invoiceBtn, styles.invoiceBtnPrimary]}
+            onPress={handleViewInvoice}
+          >
+            <Ionicons name="document-text-outline" size={18} color="#fff" />
+            <Text style={styles.invoiceBtnPrimaryText}>View Invoice</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.invoiceBtn,
+              styles.invoiceBtnSecondary,
+              downloadingInvoice && styles.invoiceBtnDisabled,
+            ]}
+            onPress={handleDownloadInvoice}
+            disabled={downloadingInvoice}
+          >
+            {downloadingInvoice ? (
+              <ActivityIndicator size="small" color="#8366CC" />
+            ) : (
+              <>
+                <Ionicons name="download-outline" size={18} color="#8366CC" />
+                <Text style={styles.invoiceBtnSecondaryText}>
+                  Download Invoice
+                </Text>
+              </>
+            )}
+          </Pressable>
         </View>
 
         {/* Price Summary */}
@@ -400,6 +472,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     color: "#1F2937",
+  },
+  timelineCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  invoiceRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  invoiceBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  invoiceBtnPrimary: {
+    backgroundColor: "#8366CC",
+  },
+  invoiceBtnPrimaryText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  invoiceBtnSecondary: {
+    backgroundColor: "#fff",
+    borderWidth: 1.5,
+    borderColor: "#8366CC",
+  },
+  invoiceBtnSecondaryText: {
+    color: "#8366CC",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  invoiceBtnDisabled: {
+    opacity: 0.6,
   },
   productCard: {
     flexDirection: "row",

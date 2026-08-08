@@ -43,11 +43,7 @@ const OrderItem = ({
 
   useEffect(() => {
     if (variant && product && onItemCalculated) {
-      const priceCalc = calculateItemTotal(
-        variant.sellingPrices,
-        qty,
-        variant.mrp,
-      );
+      const priceCalc = calculateItemTotal(variant.sellingPrices, qty);
       onItemCalculated({
         productId: id,
         variantId,
@@ -69,7 +65,7 @@ const OrderItem = ({
 
   if (!product || !variant) return null;
 
-  const priceCalc = calculateItemTotal(variant.sellingPrices, qty, variant.mrp);
+  const priceCalc = calculateItemTotal(variant.sellingPrices, qty);
   const itemTotal = priceCalc.total;
   const maxStock = variant.stock ?? 999;
 
@@ -132,7 +128,7 @@ const OrderItem = ({
           </Pressable>
         </View>
       </View>
-      <Text style={styles.orderItemTotal}>₹{itemTotal.toFixed(0)}</Text>
+      <Text style={styles.orderItemTotal}>{itemTotal === null ? "—" : `₹${itemTotal.toFixed(0)}`}</Text>
     </View>
   );
 };

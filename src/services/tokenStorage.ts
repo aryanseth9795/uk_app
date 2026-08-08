@@ -81,6 +81,41 @@ export async function loadTokens(): Promise<StoredTokens> {
   };
 }
 
+/**
+ * Reads the `exp` claim from a JWT, in milliseconds.
+ *
+ * Replaces trusting a locally computed `Date.now() + 15min`, which was written
+ * in four separate places each commented "Assume 15 min expiry" -- a hardcoded
+ * mirror of a backend value that has already changed once. It also drifts with
+ * the device clock, and mobile clocks are more often wrong than desktop ones.
+ *
+ * This is still only a hint: a client can never confirm a token is valid, and
+ * since Phase 1 added tokenVersion a token can be revoked while its exp is
+ * still in the future. Use it to decide when to refresh, never as proof of a
+ * live session.
+ *
+ * Returns null when absent or unparseable; callers must treat null as expired.
+ *
+ * Note: React Native has no global atob(), so this decodes via Buffer.
+ *
+ * See review/phase-3-consumer-app/BUG-REPORT.md CA-07.
+ */
+export function getTokenExpiry(token: string | null): number | null {
+  if (!token) return null;
+
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+
+    const json = Buffer.from(payload, 'base64').toString('utf8');
+    const claims = JSON.parse(json) as { exp?: unknown };
+
+    return typeof claims.exp === 'number' ? claims.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function clearTokens() {
   await Promise.all([delItem(K.accessToken), delItem(K.refreshToken), delItem(K.accessExp)]);
 }

@@ -1,42 +1,49 @@
 // Pricing Utilities
-// Handles quantity-based dynamic pricing
+// Handles quantity-based dynamic pricing.
+//
+// NOTE: this logic is duplicated in Consumer/Web/lib/pricing.ts and, in a third
+// form, in the backend's order controller. Three implementations of one money
+// rule already disagreed in production — see
+// review/phase-3-consumer-app/RECOMMENDATION.md for the proposed fix.
 
 import { SellingPrice } from "@api/types";
 
 /**
- * Get the correct price for a variant based on quantity
- * Prices are tiered based on minQuantity
- * Example: [{minQuantity: 1, price: 100}, {minQuantity: 10, price: 90}, {minQuantity: 50, price: 80}]
+ * Price per unit for a given quantity, or null when no tier applies.
  *
- * @param sellingPrices Array of selling prices sorted by minQuantity
+ * Returns null rather than guessing. The previous fallback was commented
+ * "Fallback to the lowest tier (minQuantity = 1)" but actually took the tier
+ * with the smallest minQuantity, *whatever that was* — so a bulk-only variant
+ * (tiers at 5 and 10) ordered singly displayed the ₹400 five-plus discount
+ * while the backend charged MRP. The comment described an assumption the code
+ * didn't enforce and the data doesn't guarantee.
+ *
+ * The backend now rejects an unpriced quantity outright (BE-33). The client's
+ * job is to display the price the server will charge; when it can't determine
+ * one, it must say so.
+ *
+ * See review/phase-3-consumer-app/BUG-REPORT.md CA-02.
+ *
+ * @param sellingPrices Tiered prices for the variant
  * @param quantity The quantity being purchased
- * @returns The price in rupees
+ * @returns Price in rupees, or null if no tier covers this quantity
  */
 export function getPriceForQuantity(
   sellingPrices: SellingPrice[],
   quantity: number
-): number {
+): number | null {
   if (!sellingPrices || sellingPrices.length === 0) {
-    return 0;
+    return null;
   }
 
-  // Sort by minQuantity descending to find the highest applicable tier
-  const sorted = [...sellingPrices].sort(
-    (a, b) => b.minQuantity - a.minQuantity
-  );
+  // Spread before sorting: sort() is in-place, and this array is owned by the
+  // TanStack Query cache — reordering it corrupts data other screens are still
+  // reading, and the symptom surfaces far from the cause (CA-03).
+  const applicableTier = [...sellingPrices]
+    .sort((a, b) => b.minQuantity - a.minQuantity)
+    .find((tier) => quantity >= tier.minQuantity);
 
-  // Find the first tier where quantity >= minQuantity
-  const applicableTier = sorted.find((tier) => quantity >= tier.minQuantity);
-
-  if (applicableTier) {
-    return applicableTier.price;
-  }
-
-  // Fallback to the lowest tier (minQuantity = 1)
-  const lowestTier = sellingPrices.sort(
-    (a, b) => a.minQuantity - b.minQuantity
-  )[0];
-  return lowestTier?.price || 0;
+  return applicableTier ? applicableTier.price : null;
 }
 
 /**
@@ -51,21 +58,17 @@ export function formatINR(priceInRupees: number): string {
 }
 
 /**
- * Calculate total price for quantity using tiered pricing
- * @param sellingPrices Array of selling prices with quantity tiers
- * @param quantity Quantity being purchased
- * @returns Object with price per unit and total
+ * Line total for a quantity. Both fields are null when no tier applies, so
+ * callers must render an unavailable state rather than a number.
  */
 export function calculateItemTotal(
   sellingPrices: SellingPrice[],
-  quantity: number,
-  mrp?: number // Keep for backward compatibility but don't use
-) {
+  quantity: number
+): { pricePerUnit: number | null; total: number | null } {
   const pricePerUnit = getPriceForQuantity(sellingPrices, quantity);
-  const total = pricePerUnit * quantity;
 
   return {
-    pricePerUnit, // Price for one unit at this quantity tier
-    total, // Total price for all units
+    pricePerUnit,
+    total: pricePerUnit === null ? null : pricePerUnit * quantity,
   };
 }

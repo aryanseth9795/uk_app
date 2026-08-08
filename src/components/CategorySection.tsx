@@ -19,8 +19,9 @@ type Product = {
   id: string;
   variantId: string;
   title: string;
-  price: number;
-  mrp: number;
+  /** null when no price tier applies — see utils/pricing.ts (CA-02). */
+  price: number | null;
+  mrp: number | null;
   image: string;
 };
 

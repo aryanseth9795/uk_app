@@ -6,8 +6,9 @@ import { colors } from "@theme/color";
 
 type Props = {
   title: string;
-  price: number;
-  mrp: number;
+  /** null when no price tier applies — see utils/pricing.ts (CA-02). */
+  price: number | null;
+  mrp: number | null;
   image: string;
   variantCount?: number;
 };
@@ -24,9 +25,14 @@ export default function ProductCard({
   onAdd: () => void;
   onPress?: () => void;
 }) {
-  const hasDiscount = data.mrp > data.price && data.mrp > 0;
+  const hasPrice = data.price !== null;
+  const hasDiscount =
+    data.price !== null &&
+    data.mrp !== null &&
+    data.mrp > data.price &&
+    data.mrp > 0;
   const discountPct = hasDiscount
-    ? Math.max(0, Math.round(((data.mrp - data.price) / data.mrp) * 100))
+    ? Math.max(0, Math.round(((data.mrp! - data.price!) / data.mrp!) * 100))
     : 0;
   const showVariantBadge = data.variantCount && data.variantCount > 1;
 
@@ -65,10 +71,12 @@ export default function ProductCard({
 
         {/* Price Section */}
         <View style={styles.priceSection}>
-          <Text style={styles.price}>{asINR(data.price)}</Text>
+          <Text style={styles.price}>
+            {hasPrice ? asINR(data.price!) : "Price unavailable"}
+          </Text>
           {hasDiscount && (
             <>
-              <Text style={styles.mrp}>{asINR(data.mrp)}</Text>
+              <Text style={styles.mrp}>{asINR(data.mrp!)}</Text>
               <View style={styles.pctBadge}>
                 <Text style={styles.pctText}>{discountPct}%</Text>
               </View>

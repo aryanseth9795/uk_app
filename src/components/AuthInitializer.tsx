@@ -2,7 +2,12 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthenticated, logout, setUser } from "@store/slices/authSlice";
-import { loadTokens, saveTokens, clearTokens } from "@services/tokenStorage";
+import {
+  loadTokens,
+  saveTokens,
+  getTokenExpiry,
+} from "@services/tokenStorage";
+import { performLogout } from "@utils/auth";
 import { useUserProfile } from "@api/hooks/useUser";
 import axios from "axios";
 import type { RefreshTokenResponse } from "@api/types";
@@ -46,7 +51,12 @@ export default function AuthInitializer() {
 
         // Check if access token is expired
         const now = Date.now();
-        const isExpired = tokens.accessExp && tokens.accessExp < now;
+        // Read expiry from the token itself, and fail CLOSED: a missing or
+        // unparseable value counts as expired, so we refresh rather than
+        // assume a live session. Previously `null` was falsy, so an unknown
+        // expiry read as "not expired" (CA-07).
+        const expiry = getTokenExpiry(tokens.accessToken);
+        const isExpired = expiry === null || expiry <= Date.now();
 
         if (!isExpired) {
           // Access token is valid, restore authenticated state
@@ -55,8 +65,7 @@ export default function AuthInitializer() {
           // Access token expired, try to refresh using refresh token
           if (!tokens.refreshToken) {
             // No refresh token available, user needs to login again
-            dispatch(logout());
-            await clearTokens();
+            await performLogout();
             return;
           }
 
@@ -85,13 +94,11 @@ export default function AuthInitializer() {
               dispatch(setAuthenticated(true));
             } else {
               // Refresh failed, logout user
-              dispatch(logout());
-              await clearTokens();
+              await performLogout();
             }
           } catch (refreshError) {
             // Refresh failed
-            dispatch(logout());
-            await clearTokens();
+            await performLogout();
           }
         }
       } catch (error) {

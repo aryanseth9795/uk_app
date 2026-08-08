@@ -293,6 +293,7 @@ import EditAddressScreen from "../screens/address/EditAddressScreen";
 import CheckoutScreen from "../screens/checkout/CheckoutScreen";
 import AllOrdersScreen from "@screens/orders/AllOrdersScreen";
 import OrderDetailScreen from "@screens/orders/OrderDetailScreen";
+import InvoiceScreen from "@screens/orders/InvoiceScreen";
 import HelpSupportScreen from "@screens/help/HelpSupportScreen";
 import AboutUsScreen from "@screens/about/AboutUsScreen";
 import SummaryScreen from "@screens/checkout/SummaryScreen";
@@ -403,6 +404,7 @@ export default function RootNavigator() {
 
       <Stack.Screen name="AllOrders" component={AllOrdersScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="Invoice" component={InvoiceScreen} />
 
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
 

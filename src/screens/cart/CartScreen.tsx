@@ -52,13 +52,11 @@ const CartItem = ({
   // Calculate and report totals when data changes
   useEffect(() => {
     if (variant && callbackRef.current) {
-      const priceCalc = calculateItemTotal(
-        variant.sellingPrices,
-        qty,
-        variant.mrp
-      );
-      // Only report selling total, no MRP
-      callbackRef.current(priceCalc.total, priceCalc.total);
+      const priceCalc = calculateItemTotal(variant.sellingPrices, qty);
+      // An unpriceable line contributes 0 to the totals and renders as
+      // "Price unavailable". The backend rejects such an order with a 400, so
+      // it cannot go through at a wrong price (CA-02).
+      callbackRef.current(priceCalc.total ?? 0, priceCalc.total ?? 0);
     }
     // Report stock info
     if (variant && stockCallbackRef.current) {
@@ -85,7 +83,7 @@ const CartItem = ({
   const isLimitedStock = variant.stock > 0 && variant.stock <= 2;
 
   // Use quantity-based pricing
-  const priceCalc = calculateItemTotal(variant.sellingPrices, qty, variant.mrp);
+  const priceCalc = calculateItemTotal(variant.sellingPrices, qty);
   const pricePerUnit = priceCalc.pricePerUnit;
   const itemTotal = priceCalc.total;
 
@@ -158,7 +156,9 @@ const CartItem = ({
         <Text
           style={[styles.itemPrice, isOutOfStock && styles.itemPriceOutOfStock]}
         >
-          ₹{pricePerUnit.toFixed(0)}
+          {pricePerUnit === null
+            ? "Price unavailable"
+            : `₹${pricePerUnit.toFixed(0)}`}
         </Text>
 
         {/* Quantity Controls - Compact */}
@@ -205,7 +205,7 @@ const CartItem = ({
               isOutOfStock && styles.itemSubtotalOutOfStock,
             ]}
           >
-            ₹{itemTotal.toFixed(0)}
+            {itemTotal === null ? "—" : `₹${itemTotal.toFixed(0)}`}
           </Text>
         </View>
       </View>

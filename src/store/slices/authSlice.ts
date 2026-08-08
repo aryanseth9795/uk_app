@@ -1,7 +1,6 @@
 // Simplified Auth Slice - Token and User State Management
 // Data fetching moved to TanStack Query hooks
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { clearTokens } from "@services/tokenStorage";
 import { clearPrimaryAddressId } from "./addressSlice";
 import type { User } from "@api/types";
 
@@ -42,9 +41,12 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.isAuthenticated = false;
-      clearTokens(); // Clear tokens from storage
-      // Note: clearPrimaryAddressId must be dispatched separately in components
-      // because reducers cannot dispatch other actions
+      // No I/O here. Reducers must be pure, and clearTokens() is async -- it
+      // was fired and forgotten, so a failed wipe was silently swallowed and
+      // left credentials on the device. Token clearing and cache purging live
+      // in performLogout() (CA-06, CA-08).
+      // Note: clearPrimaryAddressId must still be dispatched separately by
+      // callers, because reducers cannot dispatch other actions.
     },
   },
 });
