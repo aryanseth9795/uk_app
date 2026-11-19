@@ -15,6 +15,7 @@ import type {
   EditAddressRequest,
   EditAddressResponse,
   DeleteAddressResponse,
+  DeleteAccountResponse,
 } from "../types";
 
 // ===================================
@@ -117,6 +118,27 @@ export const useDeleteAddress = () => {
     },
     onError: (error) => {
       console.error("Delete address failed:", getErrorMessage(error));
+    },
+  });
+};
+
+// ===================================
+// DELETE ACCOUNT
+// ===================================
+
+/**
+ * Permanently deletes the signed-in account (Google Play requirement). The
+ * server also removes this device's push tokens. It answers 403 for a wrong
+ * password and 409 while an order is on its way; the screen shows its message.
+ */
+export const useDeleteAccount = () => {
+  return useMutation({
+    mutationFn: async (password: string): Promise<DeleteAccountResponse> => {
+      const response = await apiClient.post<DeleteAccountResponse>(
+        "/user/account/delete",
+        { password }
+      );
+      return response.data;
     },
   });
 };

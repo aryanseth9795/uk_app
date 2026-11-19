@@ -19,6 +19,7 @@ import { useProductDetail } from "@api/hooks/useProducts";
 import { useCreateOrder } from "@api/hooks/useOrders";
 import { calculateItemTotal } from "@utils/pricing";
 import OrderSuccessAnimation from "@components/OrderSuccessAnimation";
+import { selectDeliveryAddress, toOrderAddress } from "@utils/address";
 
 // Order Item Component with Quantity Selector
 const OrderItem = ({
@@ -138,6 +139,12 @@ export default function CheckoutScreen() {
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((s) => s.cart.items);
   const user = useAppSelector((s) => s.auth.user);
+  const primaryAddressId = useAppSelector((s) => s.address.primaryAddressId);
+  // The address picked in the cart, not simply the first one saved.
+  const deliveryAddress = selectDeliveryAddress(
+    user?.addresses,
+    primaryAddressId
+  );
   const isAuthenticated = !!user;
 
   const [orderItems, setOrderItems] = useState<any[]>([]);
@@ -232,7 +239,7 @@ export default function CheckoutScreen() {
   };
 
   const handlePlaceOrder = () => {
-    if (!user?.addresses || user.addresses.length === 0) {
+    if (!deliveryAddress) {
       Alert.alert("No Address", "Please add a delivery address first");
       return;
     }
@@ -249,15 +256,7 @@ export default function CheckoutScreen() {
         variantId: item.variantId,
         quantity: item.quantity,
       })),
-      address: {
-        Receiver_Name: user.addresses[0].Receiver_Name,
-        Receiver_MobileNumber: user.addresses[0].Receiver_MobileNumber,
-        Address_Line1: user.addresses[0].Address_Line1,
-        Address_Line2: user.addresses[0].Address_Line2 || "",
-        City: user.addresses[0].City,
-        pincode: user.addresses[0].pincode,
-        label: user.addresses[0].label,
-      },
+      address: toOrderAddress(deliveryAddress),
     };
 
     createOrder(orderData, {
@@ -305,7 +304,7 @@ export default function CheckoutScreen() {
     );
   }
 
-  const primaryAddress = user?.addresses?.[0];
+  const primaryAddress = deliveryAddress;
 
   return (
     <SafeScreen edges={["bottom", "left", "right", "top"]}>
@@ -359,6 +358,17 @@ export default function CheckoutScreen() {
           <View style={styles.sectionHeader}>
             <Ionicons name="location" size={20} color="#8366CC" />
             <Text style={styles.sectionTitle}>Delivery Address</Text>
+            <Pressable
+              onPress={() => navigation.navigate("Addresses")}
+              style={{ marginLeft: "auto" }}
+              accessibilityRole="button"
+              accessibilityLabel="Change delivery address"
+              hitSlop={8}
+            >
+              <Text style={{ color: "#8366CC", fontWeight: "700" }}>
+                Change
+              </Text>
+            </Pressable>
           </View>
 
           {primaryAddress ? (

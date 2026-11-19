@@ -117,6 +117,8 @@ export type RefreshTokenResponse = {
 // USER TYPES
 // ===================================
 
+export type GeoPoint = { lat: number; lng: number };
+
 export type Address = {
   _id: string;
   Receiver_Name: string;
@@ -126,6 +128,7 @@ export type Address = {
   City: string;
   pincode: string;
   label: string; // "Home", "Office", "Other"
+  location?: GeoPoint | null;
 };
 
 export type User = {
@@ -154,6 +157,8 @@ export type AddAddressRequest = {
   City: string;
   pincode: string;
   label: string;
+  /** GPS point from "Use current location"; null removes it on edit. */
+  location?: GeoPoint | null;
 };
 
 export type AddAddressResponse = {
@@ -174,6 +179,11 @@ export type DeleteAddressResponse = {
   success: true;
   message: string;
   addresses: Address[];
+};
+
+export type DeleteAccountResponse = {
+  success: true;
+  message: string;
 };
 
 // ===================================

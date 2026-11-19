@@ -17,7 +17,9 @@ import SafeScreen from "@components/SafeScreen";
 import AppHeader from "@components/AppHeader";
 import { colors } from "@theme/color";
 import { useEditAddress } from "@api/hooks/useUser";
-import type { EditAddressRequest } from "@api/types";
+import type { EditAddressRequest, GeoPoint } from "@api/types";
+import UseCurrentLocationButton from "@components/UseCurrentLocationButton";
+import type { GeocodeFields } from "@utils/geocodeFields";
 
 type InputRef =
   | React.RefObject<TextInput>
@@ -45,6 +47,17 @@ export default function EditAddressScreen() {
   const [line2, setLine2] = useState(address?.Address_Line2 || "");
   const [city, setCity] = useState(address?.City || "");
   const [pincode, setPincode] = useState(address?.pincode || "");
+  const initialLocation: GeoPoint | null = address?.location ?? null;
+  const [location, setLocation] = useState<GeoPoint | null>(initialLocation);
+
+  // Pincode always follows a newly shared location; city and area fill only
+  // blanks so nothing the customer typed is overwritten.
+  const onLocated = (point: GeoPoint, fields: GeocodeFields) => {
+    setLocation(point);
+    if (fields.pincode) setPincode(fields.pincode);
+    if (fields.city && !city) setCity(fields.city);
+    if (fields.area && !line2) setLine2(fields.area);
+  };
 
   // Track initial values to detect changes
   const initialValues = useRef({
@@ -107,13 +120,21 @@ export default function EditAddressScreen() {
       payload.Address_Line1 = line1;
     }
     if (line2 !== initialValues.current.Address_Line2) {
-      payload.Address_Line2 = line2 || undefined;
+      // "" (not undefined) so clearing the line reaches the server; JSON
+      // drops undefined and the old value would silently stay.
+      payload.Address_Line2 = line2;
     }
     if (city !== initialValues.current.City) {
       payload.City = city;
     }
     if (pincode !== initialValues.current.pincode) {
       payload.pincode = pincode;
+    }
+    if (
+      location?.lat !== initialLocation?.lat ||
+      location?.lng !== initialLocation?.lng
+    ) {
+      payload.location = location; // null removes it on the server
     }
 
     // Check if there are any changes
@@ -155,6 +176,12 @@ export default function EditAddressScreen() {
           paddingBottom: insets.bottom + 56,
         }}
       >
+        <UseCurrentLocationButton
+          location={location}
+          onLocated={onLocated}
+          onClear={() => setLocation(null)}
+        />
+
         <Field
           label="Receiver Name *"
           value={receiverName}

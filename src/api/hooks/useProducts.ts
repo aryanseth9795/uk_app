@@ -132,7 +132,6 @@ export const useSimilarProducts = (
     "queryKey" | "queryFn"
   >
 ) => {
-  console.log(categoryId,excludeProductId);
   return useQuery({
     queryKey: ["products", "similar", categoryId, excludeProductId],
     

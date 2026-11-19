@@ -12,13 +12,14 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@components/SafeScreen";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
-import { logout } from "@store/slices/authSlice";
+import { performLogout } from "@utils/auth";
 import { clearPrimaryAddressId } from "@store/slices/addressSlice";
 import { useUserProfile } from "@api/hooks/useUser";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRemoveExpoToken } from "@api/hooks/useNotifications";
 import { unregisterPushNotifications } from "@services/notificationService";
 import EmailVerifyModal from "@components/EmailVerifyModal";
+import { LEGAL_LINKS, openLegalLink } from "@utils/legalLinks";
 
 // Get initials from name
 const getInitials = (name: string): string => {
@@ -37,6 +38,9 @@ const formatJoinedDate = (dateString: string): string => {
     year: "numeric",
   })}`;
 };
+
+// Module scope, so it survives tab switches but resets when the app restarts.
+let emailPromptShownThisSession = false;
 
 // Menu Item Component
 const MenuItem = ({
@@ -83,10 +87,18 @@ export default function AccountScreen() {
 
   const userData = profileData?.user || user;
 
-  // Show email modal for authenticated users without a verified email
+  // Ask users without an email to add one, once per app session. It used to
+  // reopen on every visit to this tab, which reads as nagging.
   const [showEmailModal, setShowEmailModal] = useState(false);
   useEffect(() => {
-    if (isAuthenticated && !isLoading && userData && !userData.email) {
+    if (
+      isAuthenticated &&
+      !isLoading &&
+      userData &&
+      !userData.email &&
+      !emailPromptShownThisSession
+    ) {
+      emailPromptShownThisSession = true;
       setShowEmailModal(true);
     }
   }, [isAuthenticated, isLoading, userData]);
@@ -107,6 +119,20 @@ export default function AccountScreen() {
           >
             <Text style={styles.loginButtonText}>Login</Text>
           </Pressable>
+          {/* Google Play: the privacy policy must be reachable in the app. */}
+          <View style={styles.policyLinks}>
+            <Pressable onPress={() => openLegalLink(LEGAL_LINKS.privacy)}>
+              <Text style={styles.policyLinkText}>Privacy Policy</Text>
+            </Pressable>
+            <Text style={styles.policyLinkDot}>·</Text>
+            <Pressable onPress={() => openLegalLink(LEGAL_LINKS.terms)}>
+              <Text style={styles.policyLinkText}>Terms</Text>
+            </Pressable>
+            <Text style={styles.policyLinkDot}>·</Text>
+            <Pressable onPress={() => openLegalLink(LEGAL_LINKS.returns)}>
+              <Text style={styles.policyLinkText}>Returns</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeScreen>
     );
@@ -136,7 +162,11 @@ export default function AccountScreen() {
       // Don't block logout if notification unregistration fails
     }
 
-    dispatch(logout());
+    // performLogout clears the stored tokens and the query cache as well as
+    // Redux. dispatch(logout()) alone left the tokens on the phone, so the
+    // next launch signed the same customer straight back in, and on a shared
+    // phone showed their orders to the next person (CA-06/CA-08 pattern).
+    await performLogout();
     dispatch(clearPrimaryAddressId()); // Clear primary address on logout
     navigation.navigate("Tabs");
   };
@@ -178,6 +208,26 @@ export default function AccountScreen() {
             title="My Address"
             subtitle={`${userData?.addresses?.length || 0} saved addresses`}
             onPress={() => navigation.navigate("Addresses")}
+          />
+        </View>
+
+        {/* Policies - Google Play requires the privacy policy in-app */}
+        <View style={styles.menuSection}>
+          <MenuItem
+            icon="shield-checkmark"
+            title="Privacy Policy"
+            subtitle="What we collect and why"
+            onPress={() => openLegalLink(LEGAL_LINKS.privacy)}
+          />
+          <MenuItem
+            icon="document-text"
+            title="Terms of Service"
+            onPress={() => openLegalLink(LEGAL_LINKS.terms)}
+          />
+          <MenuItem
+            icon="return-down-back"
+            title="Returns & Refunds"
+            onPress={() => openLegalLink(LEGAL_LINKS.returns)}
           />
         </View>
 
@@ -241,6 +291,14 @@ export default function AccountScreen() {
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.logoutButtonText}>Logout</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.deleteAccountLink}
+          onPress={() => navigation.navigate("DeleteAccount")}
+          accessibilityRole="button"
+        >
+          <Text style={styles.deleteAccountLinkText}>Delete account</Text>
         </Pressable>
       </ScrollView>
     </SafeScreen>
@@ -454,5 +512,33 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 16,
+  },
+  deleteAccountLink: {
+    alignSelf: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginTop: 4,
+  },
+  deleteAccountLinkText: {
+    color: "#6B7280",
+    fontSize: 14,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  policyLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 24,
+  },
+  policyLinkText: {
+    color: "#8366CC",
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: 8,
+  },
+  policyLinkDot: {
+    color: "#9CA3AF",
+    fontSize: 13,
   },
 });

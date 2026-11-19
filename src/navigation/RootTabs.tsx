@@ -283,9 +283,6 @@ import ProductDetailScreen from "@/screens/product/ProductDetailScreen";
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignupScreen from "../screens/auth/SignupScreen";
 import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
-import RegisterScreen from "@/screens/auth/RegisterScreen";
-
-import AuthGate from "@components/AuthGate";
 import { useAppSelector } from "@store/hooks";
 import AddressesScreen from "@screens/address/AddressesScreen";
 import AddAddressScreen from "@screens/address/AddAddressScreen";
@@ -296,6 +293,7 @@ import OrderDetailScreen from "@screens/orders/OrderDetailScreen";
 import InvoiceScreen from "@screens/orders/InvoiceScreen";
 import HelpSupportScreen from "@screens/help/HelpSupportScreen";
 import AboutUsScreen from "@screens/about/AboutUsScreen";
+import DeleteAccountScreen from "@screens/account/DeleteAccountScreen";
 import SummaryScreen from "@screens/checkout/SummaryScreen";
 
 const Tab = createBottomTabNavigator();
@@ -393,11 +391,6 @@ export default function RootNavigator() {
         component={LoginScreen}
         options={{ presentation: "modal" }}
       />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{ presentation: "modal" }}
-      />
       <Stack.Screen name="Addresses" component={AddressesScreen} />
       <Stack.Screen name="AddAddress" component={AddAddressScreen} />
       <Stack.Screen name="EditAddress" component={EditAddressScreen} />
@@ -409,6 +402,7 @@ export default function RootNavigator() {
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
 
       <Stack.Screen name="AboutUs" component={AboutUsScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Summary" component={SummaryScreen} />
       <Stack.Screen
         name="Checkout"

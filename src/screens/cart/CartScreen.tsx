@@ -16,6 +16,7 @@ import SafeScreen from "@components/SafeScreen";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { removeFromCart, updateQty, clearCart } from "@store/slices/cartSlice";
 import { useProductDetail } from "@api/hooks/useProducts";
+import { selectDeliveryAddress } from "@utils/address";
 import {
   getPriceForQuantity,
   formatINR,
@@ -260,20 +261,11 @@ export default function CartScreen() {
   );
 
   // Get primary address or fallback to first address
-  const displayAddress = React.useMemo(() => {
-    if (!user?.addresses || user.addresses.length === 0) return null;
-
-    // Find primary address by ID
-    if (primaryAddressId) {
-      const primary = user.addresses.find(
-        (addr) => addr._id === primaryAddressId
-      );
-      if (primary) return primary;
-    }
-
-    // Fallback to first address
-    return user.addresses[0];
-  }, [user?.addresses, primaryAddressId]);
+  // Same helper as checkout, so the address shown here is the one ordered.
+  const displayAddress = React.useMemo(
+    () => selectDeliveryAddress(user?.addresses, primaryAddressId) ?? null,
+    [user?.addresses, primaryAddressId]
+  );
 
   // Recalculate totals whenever itemTotalsRef changes or cartItems changes
   const recalculateTotals = () => {

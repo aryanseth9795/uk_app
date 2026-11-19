@@ -18,6 +18,9 @@ import SafeScreen from "@components/SafeScreen";
 import AppHeader from "@components/AppHeader";
 import { colors } from "@theme/color";
 import { useAddAddress } from "@api/hooks/useUser";
+import UseCurrentLocationButton from "@components/UseCurrentLocationButton";
+import type { GeoPoint } from "@api/types";
+import type { GeocodeFields } from "@utils/geocodeFields";
 
 type InputRef =
   | React.RefObject<TextInput>
@@ -37,6 +40,16 @@ export default function AddAddressScreen() {
   const [line2, setLine2] = useState("");
   const [city, setCity] = useState("");
   const [pincode, setPincode] = useState("");
+  const [location, setLocation] = useState<GeoPoint | null>(null);
+
+  // Pincode always follows the shared location; city and area fill only
+  // blanks so nothing the customer typed is overwritten.
+  const onLocated = (point: GeoPoint, fields: GeocodeFields) => {
+    setLocation(point);
+    if (fields.pincode) setPincode(fields.pincode);
+    if (fields.city && !city) setCity(fields.city);
+    if (fields.area && !line2) setLine2(fields.area);
+  };
 
   // Refs for "next" focus
   const phoneRef = useRef<TextInput>(null);
@@ -72,6 +85,7 @@ export default function AddAddressScreen() {
         City: city,
         pincode: pincode,
         label: label,
+        ...(location ? { location } : {}),
       },
       {
         onSuccess: () => {
@@ -104,6 +118,12 @@ export default function AddAddressScreen() {
           paddingBottom: insets.bottom + 56,
         }}
       >
+        <UseCurrentLocationButton
+          location={location}
+          onLocated={onLocated}
+          onClear={() => setLocation(null)}
+        />
+
         <Field
           label="Receiver Name *"
          

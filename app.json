@@ -42,7 +42,15 @@
     "owner": "aryanseth9795",
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UR Shop uses your location only when you tap Use current location, to fill in your delivery address.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "appVersion"
