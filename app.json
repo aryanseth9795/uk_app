@@ -6,11 +6,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#6F56BF"
-    },
     "updates": {
       "enabled": true,
       "url": "https://u.expo.dev/b70345c5-868e-4dce-901a-fd05810ec451"
@@ -23,13 +18,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#6F56BF",
-        "monochromeImage": "./assets/icon.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png",
+        "backgroundColor": "#7C3AED"
       },
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "android.permission.POST_NOTIFICATIONS",
         "android.permission.POST_NOTIFICATIONS"
       ],
       "package": "com.aryanseth9795.urshop"
@@ -49,6 +43,22 @@
           "locationWhenInUsePermission": "UR Shop uses your location only when you tap Use current location, to fill in your delivery address.",
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#7C3AED"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#7C3AED"
         }
       ]
     ],
