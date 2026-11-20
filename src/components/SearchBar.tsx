@@ -43,6 +43,8 @@ type Props = {
   /** When set, input hides and we show a label chip with a clear (×) icon */
   activeLabel?: string | null;
   onClearActive?: () => void;
+
+  height?: number;
 };
 
 export default function SearchBar({
@@ -51,21 +53,23 @@ export default function SearchBar({
   onSubmitEditing,
   activeLabel,
   onClearActive,
+  height = 44,
 }: Props) {
   const hasActive = !!activeLabel;
 
   return (
     <View
       style={{
-        height: 44,
+        height,
         backgroundColor: '#fff',
-        paddingHorizontal: 12,
+        paddingHorizontal: 14,
         alignItems: 'center',
         flexDirection: 'row',
-        gap: 8,
+        gap: 10,
       }}
     >
-      <Ionicons name="search-outline" size={18} color="#6B7280" />
+      {/* Brand purple ties the pill to the header it sits in. */}
+      <Ionicons name="search-outline" size={20} color={colors.tint} />
 
       {hasActive ? (
         // Active label view
@@ -109,7 +113,7 @@ export default function SearchBar({
           placeholderTextColor="#9CA3AF"
           returnKeyType="search"
           onSubmitEditing={onSubmitEditing}
-          style={{ flex: 1, paddingVertical: 8, color: '#111827' }}
+          style={{ flex: 1, paddingVertical: 8, color: '#111827', fontSize: 15 }}
         />
       )}
     </View>

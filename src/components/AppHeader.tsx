@@ -32,6 +32,12 @@ type Props = {
 
 const BRAND_TITLE = 'UR Shop';
 
+/** Side margin shared by the logo, the search pill and the page's cards. */
+const GUTTER = 16;
+const PILL_HEIGHT = 48;
+/** Space under the pill before the page content starts. */
+const BELOW_PILL = 4;
+
 export default function AppHeader({
   title = BRAND_TITLE,
   showLogo,
@@ -54,9 +60,6 @@ export default function AppHeader({
   const value = searchValue ?? internal;
   const setValue = onSearchChange ?? setInternal;
 
-  const FLOAT_OFFSET = 40;
-  const SEARCH_HEIGHT = 10;
-
   // Overlay colors (visible on white)
   const OVERLAY_BG = '#F5F3FF';     // violet-50
   const OVERLAY_BORDER = '#DDD6FE'; // violet-200
@@ -68,59 +71,71 @@ export default function AppHeader({
     !activeLabel &&
     (suggestionsLoading || (value.trim().length > 0 && suggestions.length > 0));
 
-  const RESERVED_SPACE = showSearch ? FLOAT_OFFSET + SEARCH_HEIGHT -12
-   : 0;
-
   return (
-    <View style={{ position: 'relative', zIndex: 100, elevation: 100 }}>
-      <LinearGradient colors={[colors.headerStart, colors.headerEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-        <SafeAreaView edges={['top', 'left', 'right']}>
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingTop: 6,
-              paddingBottom: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-            }}
-          >
-            {withLogo ? (
-              <BrandHeaderLockup tagline={subtitle} />
-            ) : (
-              <View style={{ flexShrink: 1 }}>
-                <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
-                  {title}
-                </Text>
-                {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
-              </View>
-            )}
-          </View>
+    <View
+      style={{
+        position: 'relative',
+        zIndex: 100,
+        elevation: 100,
+        paddingBottom: showSearch ? BELOW_PILL : 0,
+      }}
+    >
+      {/* Purple backdrop. It runs up under the status bar and, on the home
+          screen, stops halfway down the search pill so the pill sits across
+          the edge between the header and the page. */}
+      <LinearGradient
+        colors={[colors.headerStart, colors.headerEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: showSearch ? PILL_HEIGHT / 2 + BELOW_PILL : 0,
+        }}
+      />
+      <SafeAreaView edges={['top', 'left', 'right']}>
+        <View
+          style={{
+            paddingHorizontal: GUTTER,
+            paddingTop: 10,
+            paddingBottom: showSearch ? 14 : 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          {withLogo ? (
+            <BrandHeaderLockup tagline={subtitle} />
+          ) : (
+            <View style={{ flexShrink: 1 }}>
+              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
+                {title}
+              </Text>
+              {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
+            </View>
+          )}
+        </View>
 
-          {showSearch && (
+        {showSearch && (
+          <View style={{ marginHorizontal: GUTTER }}>
+            {/* Search pill: a plum-tinted shadow keeps it part of the purple
+                header rather than a grey card dropped on top of it. */}
             <View
               style={{
-                paddingHorizontal: 12,
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: -FLOAT_OFFSET+8,
+                borderRadius: 16,
+                backgroundColor: '#fff',
+                shadowColor: '#2E1065',
+                shadowOpacity: 0.2,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 6,
               }}
             >
-              {/* Search pill */}
-              <View
-                style={{
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: 6,
-                  backgroundColor: '#fff',
-                }}
-              >
+              <View style={{ borderRadius: 16, overflow: 'hidden' }}>
                 <SearchBar
+                  height={PILL_HEIGHT}
                   value={value}
                   onChangeText={setValue}
                   onSubmitEditing={() => onSearchSubmit?.(value)}
@@ -128,66 +143,64 @@ export default function AppHeader({
                   onClearActive={onClearActive}
                 />
               </View>
-
-              {/* Suggestions overlay (absolute, tinted, over content) */}
-              {open && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    left: 16,
-                    right: 16,
-                    top: SEARCH_HEIGHT + 42,
-                    backgroundColor: OVERLAY_BG,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: OVERLAY_BORDER,
-                    maxHeight: 240,
-                    overflow: 'hidden',
-                    zIndex: 1000,
-                    elevation: 16,
-                    shadowColor: '#000',
-                    shadowOpacity: 0.15,
-                    shadowRadius: 12,
-                    shadowOffset: { width: 0, height: 6 },
-                  }}
-                >
-                  {suggestionsLoading ? (
-                    <View style={{ paddingVertical: 12, alignItems: 'center', justifyContent: 'center' }}>
-                      <ActivityIndicator />
-                    </View>
-                  ) : (
-                    suggestions.slice(0, 6).map((label, idx) => (
-                      <Pressable
-                        key={`${label}-${idx}`}
-                        onPress={() => onSelectSuggestion?.(label)}
-                        style={({ pressed }) => [
-                          {
-                            paddingVertical: 10,
-                            paddingHorizontal: 12,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 8,
-                            borderTopWidth: idx === 0 ? 0 : 1,
-                            borderTopColor: '#EDE9FE',
-                          },
-                          pressed && { backgroundColor: ROW_PRESS_BG },
-                        ]}
-                      >
-                        <Ionicons name="search-outline" size={16} color="#7C3AED" />
-                        <Text style={{ color: '#111827', flex: 1 }} numberOfLines={1}>
-                          {label}
-                        </Text>
-                      </Pressable>
-                    ))
-                  )}
-                </View>
-              )}
             </View>
-          )}
-        </SafeAreaView>
 
-        {RESERVED_SPACE > 0 && <View style={{ height: RESERVED_SPACE }} />}
-      </LinearGradient>
+            {/* Suggestions overlay (absolute, tinted, over content) */}
+            {open && (
+              <View
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: PILL_HEIGHT + 6,
+                  backgroundColor: OVERLAY_BG,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: OVERLAY_BORDER,
+                  maxHeight: 240,
+                  overflow: 'hidden',
+                  zIndex: 1000,
+                  elevation: 16,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  shadowOffset: { width: 0, height: 6 },
+                }}
+              >
+                {suggestionsLoading ? (
+                  <View style={{ paddingVertical: 12, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator />
+                  </View>
+                ) : (
+                  suggestions.slice(0, 6).map((label, idx) => (
+                    <Pressable
+                      key={`${label}-${idx}`}
+                      onPress={() => onSelectSuggestion?.(label)}
+                      style={({ pressed }) => [
+                        {
+                          paddingVertical: 10,
+                          paddingHorizontal: 12,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 8,
+                          borderTopWidth: idx === 0 ? 0 : 1,
+                          borderTopColor: '#EDE9FE',
+                        },
+                        pressed && { backgroundColor: ROW_PRESS_BG },
+                      ]}
+                    >
+                      <Ionicons name="search-outline" size={16} color="#7C3AED" />
+                      <Text style={{ color: '#111827', flex: 1 }} numberOfLines={1}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  ))
+                )}
+              </View>
+            )}
+          </View>
+        )}
+      </SafeAreaView>
     </View>
   );
 }
