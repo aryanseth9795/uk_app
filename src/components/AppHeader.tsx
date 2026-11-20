@@ -6,10 +6,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@theme/color';
 import SearchBar from '@components/SearchBar';
+import BrandMark from '@components/BrandMark';
 
 type Props = {
   title?: string;
   subtitle?: string;
+  /** Show the bag logo beside the title. Default: only for the brand title. */
+  showLogo?: boolean;
   showSearch?: boolean;
 
   // Controlled search input while typing
@@ -27,8 +30,11 @@ type Props = {
   onSelectSuggestion?: (v: string) => void;
 };
 
+const BRAND_TITLE = 'UR Shop';
+
 export default function AppHeader({
-  title = 'UR Shop',
+  title = BRAND_TITLE,
+  showLogo,
   subtitle = 'Aap Ki Apni Dukaan',
   showSearch = true,
   searchValue,
@@ -40,6 +46,10 @@ export default function AppHeader({
   suggestionsLoading = false,
   onSelectSuggestion,
 }: Props) {
+  // The brand logo sits beside the shop name. Screens that pass their own
+  // title ("Add Address", "Help & Support") keep a plain text heading.
+  const withLogo = showLogo ?? title === BRAND_TITLE;
+
   const [internal, setInternal] = useState('');
   const value = searchValue ?? internal;
   const setValue = onSearchChange ?? setInternal;
@@ -65,11 +75,23 @@ export default function AppHeader({
     <View style={{ position: 'relative', zIndex: 100, elevation: 100 }}>
       <LinearGradient colors={[colors.headerStart, colors.headerEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
         <SafeAreaView edges={['top', 'left', 'right']}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 20 }}>
-            <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
-              {title}
-            </Text>
-            {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingTop: 6,
+              paddingBottom: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            {withLogo && <BrandMark size={52} />}
+            <View style={{ flexShrink: 1 }}>
+              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
+                {title}
+              </Text>
+              {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
+            </View>
           </View>
 
           {showSearch && (
