@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@theme/color';
 import SearchBar from '@components/SearchBar';
-import BrandMark from '@components/BrandMark';
+import BrandHeaderLockup from '@components/BrandHeaderLockup';
 
 type Props = {
   title?: string;
@@ -85,13 +85,16 @@ export default function AppHeader({
               gap: 10,
             }}
           >
-            {withLogo && <BrandMark size={52} />}
-            <View style={{ flexShrink: 1 }}>
-              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
-                {title}
-              </Text>
-              {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
-            </View>
+            {withLogo ? (
+              <BrandHeaderLockup tagline={subtitle} />
+            ) : (
+              <View style={{ flexShrink: 1 }}>
+                <Text style={{ color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.1, lineHeight: 30 }}>
+                  {title}
+                </Text>
+                {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.85)', marginTop: 6 }}>{subtitle}</Text>}
+              </View>
+            )}
           </View>
 
           {showSearch && (
