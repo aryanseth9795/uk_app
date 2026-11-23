@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { clearCart, updateQty, removeFromCart } from "@store/slices/cartSlice";
 import { useProductDetail } from "@api/hooks/useProducts";
 import { useCreateOrder } from "@api/hooks/useOrders";
-import { calculateItemTotal } from "@utils/pricing";
+import { calculateItemTotal, getMinOrderQty } from "@utils/pricing";
 import OrderSuccessAnimation from "@components/OrderSuccessAnimation";
 import { selectDeliveryAddress, toOrderAddress } from "@utils/address";
 
@@ -41,6 +41,14 @@ const OrderItem = ({
 
   const product = productData?.product;
   const variant = product?.variants?.find((v) => v._id === variantId);
+  const minQty = variant ? getMinOrderQty(variant.sellingPrices) : 1;
+
+  // Same guard as the cart: never submit a bulk-only line below its minimum.
+  useEffect(() => {
+    if (variant && qty < minQty) {
+      onQtyChange?.(id, variantId, minQty);
+    }
+  }, [variant, qty, minQty, id, variantId, onQtyChange]);
 
   useEffect(() => {
     if (variant && product && onItemCalculated) {
@@ -71,7 +79,7 @@ const OrderItem = ({
   const maxStock = variant.stock ?? 999;
 
   const handleDecrement = () => {
-    if (qty <= 1) {
+    if (qty <= minQty) {
       onRemove?.(id, variantId);
     } else {
       onQtyChange?.(id, variantId, qty - 1);
@@ -106,13 +114,16 @@ const OrderItem = ({
             {variant.size && `${variant.size}`}
           </Text>
         )}
+        {minQty > 1 && (
+          <Text style={styles.minQtyText}>Min. order: {minQty}</Text>
+        )}
         {/* Quantity Controls */}
         <View style={styles.qtyControls}>
           <Pressable onPress={handleDecrement} style={styles.qtyBtn}>
             <Ionicons
-              name={qty <= 1 ? "trash-outline" : "remove"}
+              name={qty <= minQty ? "trash-outline" : "remove"}
               size={16}
-              color={qty <= 1 ? "#EF4444" : "#6366F1"}
+              color={qty <= minQty ? "#EF4444" : "#6366F1"}
             />
           </Pressable>
           <Text style={styles.qtyText}>{qty}</Text>
@@ -195,12 +206,16 @@ export default function CheckoutScreen() {
           i.variantId === itemData.variantId,
       );
       if (existing) {
-        // Update quantity if changed
-        if (existing.quantity !== itemData.quantity) {
+        // Price follows quantity: crossing a tier (or lifting a bulk-only
+        // line to its minimum) changes the per-unit price, not just the count.
+        if (
+          existing.quantity !== itemData.quantity ||
+          existing.price !== itemData.price
+        ) {
           return prev.map((i) =>
             i.productId === itemData.productId &&
             i.variantId === itemData.variantId
-              ? { ...i, quantity: itemData.quantity }
+              ? { ...i, quantity: itemData.quantity, price: itemData.price }
               : i,
           );
         }
@@ -607,6 +622,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#1F2937",
+  },
+  minQtyText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#8366CC",
   },
   orderItemVariant: {
     fontSize: 12,

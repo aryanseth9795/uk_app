@@ -23,7 +23,7 @@ import VerticalProductSection from "@components/VerticalProductSection";
 import { useAppDispatch } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
 import { useCategoryProducts, useCategoryMixedProducts } from "@api/hooks";
-import { getPriceForQuantity } from "@utils/pricing";
+import { getStartingPrice } from "@utils/pricing";
 import type { CategoryMixedProductsResponse } from "@api/types";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCartToast } from "@context/CartToastContext";
@@ -82,8 +82,13 @@ export default function CategoryProductsScreen() {
   );
 
   const handleAddToCart = useCallback(
-    (productId: string, variantId: string, productName?: string) => {
-      dispatch(addToCart({ id: productId, variantId, qty: 1 }));
+    (
+      productId: string,
+      variantId: string,
+      productName?: string,
+      minQty?: number,
+    ) => {
+      dispatch(addToCart({ id: productId, variantId, minQty }));
       if (productName) showCartToast(productName);
     },
     [dispatch, showCartToast],
@@ -136,7 +141,9 @@ export default function CategoryProductsScreen() {
   if (data.level === 2) {
     const products = data.products.map((p) => {
       const firstVariant = p.variants?.[0];
-      const price = getPriceForQuantity(firstVariant?.sellingPrices || [], 1);
+      const { price, minQty } = getStartingPrice(
+        firstVariant?.sellingPrices || [],
+      );
       const mrp = firstVariant?.mrp || price;
 
       return {
@@ -147,6 +154,7 @@ export default function CategoryProductsScreen() {
         mrp: mrp,
         image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
         variantCount: p.variants?.length || 0,
+        minQty,
       };
     });
 
@@ -167,7 +175,14 @@ export default function CategoryProductsScreen() {
                 <ProductCard
                   data={item}
                   onPress={() => handleProductPress(item.id)}
-                  onAdd={() => handleAddToCart(item.id, item.variantId)}
+                  onAdd={() =>
+                    handleAddToCart(
+                      item.id,
+                      item.variantId,
+                      undefined,
+                      item.minQty,
+                    )
+                  }
                 />
               </View>
             )}
@@ -203,9 +218,8 @@ export default function CategoryProductsScreen() {
           {subcategories.map((subcategory) => {
             const products = subcategory.products.map((p) => {
               const firstVariant = p.variants?.[0];
-              const price = getPriceForQuantity(
+              const { price, minQty } = getStartingPrice(
                 firstVariant?.sellingPrices || [],
-                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -217,6 +231,7 @@ export default function CategoryProductsScreen() {
                 mrp: mrp,
                 image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
                 variantCount: p.variants?.length || 0,
+                minQty,
               };
             });
 

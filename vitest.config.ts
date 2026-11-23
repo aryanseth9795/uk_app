@@ -9,7 +9,11 @@ export default defineConfig({
     globals: true,
     // Only pure logic is unit-tested here — screens need a React Native
     // renderer, which is a separate setup.
-    include: ["src/utils/**/*.test.ts", "src/services/**/*.test.ts"],
+    include: [
+      "src/utils/**/*.test.ts",
+      "src/services/**/*.test.ts",
+      "src/store/**/*.test.ts",
+    ],
   },
   // Must mirror the tsconfig/babel path aliases or every "@api/..." import fails.
   resolve: {

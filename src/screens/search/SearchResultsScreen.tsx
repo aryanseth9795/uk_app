@@ -19,7 +19,7 @@ import ProductCard from "@components/ProductCard";
 import { useAppDispatch } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
 import { useSearchProducts } from "@api/hooks";
-import { getPriceForQuantity } from "@utils/pricing";
+import { getStartingPrice } from "@utils/pricing";
 import { useCartToast } from "@context/CartToastContext";
 
 const { width } = Dimensions.get("window");
@@ -52,7 +52,9 @@ export default function SearchResultsScreen() {
 
     data.products.forEach((p) => {
       const firstVariant = p.variants?.[0];
-      const price = getPriceForQuantity(firstVariant?.sellingPrices || [], 1);
+      const { price, minQty } = getStartingPrice(
+        firstVariant?.sellingPrices || [],
+      );
       const mrp = firstVariant?.mrp || price;
 
       const product = {
@@ -64,6 +66,7 @@ export default function SearchResultsScreen() {
         image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
         searchScore: p.score || 0,
         variantCount: p.variants?.length || 0,
+        minQty,
       };
 
       // Separate by search score (>6 = main results, <=6 = suggestions)
@@ -132,7 +135,7 @@ export default function SearchResultsScreen() {
       addToCart({
         id: item.id,
         variantId: item.variantId,
-        qty: 1,
+        minQty: item.minQty,
       }),
     );
     showCartToast(item.title);

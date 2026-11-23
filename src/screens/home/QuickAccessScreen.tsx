@@ -24,7 +24,7 @@ import {
   FilterType,
   MixedFilterType,
 } from "@api/hooks/useProducts";
-import { getPriceForQuantity } from "@utils/pricing";
+import { getStartingPrice } from "@utils/pricing";
 import type { FilteredMixedProductsResponse } from "@api/types";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCartToast } from "@context/CartToastContext";
@@ -130,9 +130,8 @@ export default function QuickAccessScreen() {
             categoryName={category.categoryName}
             products={category.products.map((p: any) => {
               const firstVariant = p.variants?.[0];
-              const price = getPriceForQuantity(
+              const { price, minQty } = getStartingPrice(
                 firstVariant?.sellingPrices || [],
-                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -144,14 +143,15 @@ export default function QuickAccessScreen() {
                 mrp: mrp,
                 image: String(p.thumbnail?.secureUrl || ""),
                 variantCount: p.variants?.length || 0,
+                minQty,
               };
             })}
             onPressMore={handleMorePress}
             onPressProduct={(id) =>
               navigation.navigate("ProductDetail", { productId: id })
             }
-            onAddToCart={(id, variantId, productName) => {
-              dispatch(addToCart({ id, variantId }));
+            onAddToCart={(id, variantId, productName, minQty) => {
+              dispatch(addToCart({ id, variantId, minQty }));
               if (productName) showCartToast(productName);
             }}
           />
@@ -181,8 +181,8 @@ export default function QuickAccessScreen() {
           onProductPress={(id) =>
             navigation.navigate("ProductDetail", { productId: id })
           }
-          onAddToCart={(id, variantId, productName) => {
-            dispatch(addToCart({ id, variantId }));
+          onAddToCart={(id, variantId, productName, minQty) => {
+            dispatch(addToCart({ id, variantId, minQty }));
             if (productName) showCartToast(productName);
           }}
         />

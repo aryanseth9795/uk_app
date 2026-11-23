@@ -32,7 +32,7 @@ import {
   useBanners,
 } from "@api/hooks";
 import type { SearchFilters, MixedProductsResponse } from "@api/types";
-import { getPriceForQuantity } from "@utils/pricing";
+import { getStartingPrice } from "@utils/pricing";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCartToast } from "@context/CartToastContext";
 
@@ -161,7 +161,9 @@ export default function HomeScreen() {
     return pages.flatMap((page: MixedProductsResponse) =>
       page.data.map((p: any) => {
         const firstVariant = p.variants?.[0];
-        const price = getPriceForQuantity(firstVariant?.sellingPrices || [], 1);
+        const { price, minQty } = getStartingPrice(
+          firstVariant?.sellingPrices || [],
+        );
         const mrp = firstVariant?.mrp || price;
 
         return {
@@ -172,6 +174,7 @@ export default function HomeScreen() {
           mrp: mrp,
           image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
           variantCount: p.variants?.length || 0,
+          minQty,
         };
       }),
     );
@@ -324,9 +327,16 @@ export default function HomeScreen() {
               mrp: item.mrp,
               image: item.image,
               variantCount: item.variantCount,
+              minQty: item.minQty,
             }}
             onAdd={() => {
-              dispatch(addToCart({ id: item.id, variantId: item.variantId }));
+              dispatch(
+                addToCart({
+                  id: item.id,
+                  variantId: item.variantId,
+                  minQty: item.minQty,
+                }),
+              );
               showCartToast(item.title);
             }}
             onPress={() =>
@@ -407,9 +417,8 @@ export default function HomeScreen() {
             categoryName={category.categoryName}
             products={category.products.map((p: any) => {
               const firstVariant = p.variants?.[0];
-              const price = getPriceForQuantity(
+              const { price, minQty } = getStartingPrice(
                 firstVariant?.sellingPrices || [],
-                1,
               );
               const mrp = firstVariant?.mrp || price;
 
@@ -421,14 +430,15 @@ export default function HomeScreen() {
                 mrp: mrp,
                 image: String(p.thumbnail?.secureUrl || p.thumbnail?.url || ""),
                 variantCount: p.variants?.length || 0,
+                minQty,
               };
             })}
             onPressMore={handleMorePress}
             onPressProduct={(id) =>
               navigation.navigate("ProductDetail", { productId: id })
             }
-            onAddToCart={(id, variantId, productName) => {
-              dispatch(addToCart({ id, variantId }));
+            onAddToCart={(id, variantId, productName, minQty) => {
+              dispatch(addToCart({ id, variantId, minQty }));
               if (productName) {
                 showCartToast(productName);
               }

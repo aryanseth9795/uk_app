@@ -21,6 +21,7 @@ import {
   getPriceForQuantity,
   formatINR,
   calculateItemTotal,
+  getMinOrderQty,
 } from "@utils/pricing";
 
 // Cart Item Component - Compact Version with Stock Validation
@@ -42,6 +43,16 @@ const CartItem = ({
 
   const product = productData?.product;
   const variant = product?.variants?.find((v) => v._id === variantId);
+  const minQty = variant ? getMinOrderQty(variant.sellingPrices) : 1;
+
+  // A bulk-only line below its minimum has no price and the backend rejects
+  // it -- e.g. added before minimums were enforced, or kept in a saved cart.
+  // Lift it to the minimum rather than leaving it stuck as "Price unavailable".
+  useEffect(() => {
+    if (variant && qty < minQty) {
+      dispatch(updateQty({ id, variantId, qty: minQty }));
+    }
+  }, [variant, qty, minQty, id, variantId, dispatch]);
 
   // Use ref to store callback to avoid infinite loop
   const callbackRef = useRef(onTotalsCalculated);
@@ -152,6 +163,9 @@ const CartItem = ({
             {variant.size && `${variant.size}`}
           </Text>
         )}
+        {minQty > 1 && (
+          <Text style={styles.minQtyText}>Min. order: {minQty}</Text>
+        )}
 
         {/* Price - Only Selling Price */}
         <Text
@@ -166,7 +180,7 @@ const CartItem = ({
         <View style={styles.qtyControls}>
           <Pressable
             onPress={() => {
-              if (qty > 1) {
+              if (qty > minQty) {
                 dispatch(updateQty({ id, variantId, qty: qty - 1 }));
               } else {
                 dispatch(removeFromCart({ id, variantId }));
@@ -175,7 +189,7 @@ const CartItem = ({
             style={styles.qtyButton}
           >
             <Ionicons
-              name={qty === 1 ? "trash-outline" : "remove"}
+              name={qty <= minQty ? "trash-outline" : "remove"}
               size={14}
               color="#6B7280"
             />
@@ -693,6 +707,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: "#1F2937",
+  },
+  minQtyText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#8366CC",
   },
   itemVariant: {
     fontSize: 11,

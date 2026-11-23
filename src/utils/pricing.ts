@@ -72,3 +72,28 @@ export function calculateItemTotal(
     total: pricePerUnit === null ? null : pricePerUnit * quantity,
   };
 }
+
+/**
+ * Smallest quantity that can be ordered: the lowest tier's minQuantity.
+ *
+ * Admin can price a variant in bulk only (e.g. a single "3+ → ₹38" tier). Such
+ * a variant has no price at quantity 1 and the backend rejects an order for 1,
+ * so its real offer is "₹38 each, minimum 3".
+ */
+export function getMinOrderQty(sellingPrices: SellingPrice[]): number {
+  if (!sellingPrices || sellingPrices.length === 0) return 1;
+  return Math.max(1, Math.min(...sellingPrices.map((t) => t.minQuantity)));
+}
+
+/**
+ * What a product card shows: the per-unit price at the minimum order quantity,
+ * plus that minimum so the card can say "Min 3" and Add to Cart can add 3.
+ * This is a price the server will actually charge, unlike asking for qty 1.
+ */
+export function getStartingPrice(sellingPrices: SellingPrice[]): {
+  price: number | null;
+  minQty: number;
+} {
+  const minQty = getMinOrderQty(sellingPrices);
+  return { price: getPriceForQuantity(sellingPrices, minQty), minQty };
+}

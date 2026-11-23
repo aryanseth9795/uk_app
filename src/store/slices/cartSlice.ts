@@ -20,16 +20,23 @@ const cartSlice = createSlice({
   reducers: {
     addToCart(
       state,
-      action: PayloadAction<{ id: string; variantId: string; qty?: number }>
+      action: PayloadAction<{
+        id: string;
+        variantId: string;
+        qty?: number;
+        /** Lowest orderable quantity (bulk-only pricing); see getMinOrderQty. */
+        minQty?: number;
+      }>
     ) {
-      const { id, variantId, qty = 1 } = action.payload;
+      const { id, variantId, qty = 1, minQty = 1 } = action.payload;
       const existing = state.items.find(
         (item) => item.id === id && item.variantId === variantId
       );
+      // Never leave a line below the minimum: the backend rejects it.
       if (existing) {
-        existing.qty += qty;
+        existing.qty = Math.max(existing.qty + qty, minQty);
       } else {
-        state.items.push({ id, variantId, qty });
+        state.items.push({ id, variantId, qty: Math.max(qty, minQty) });
       }
     },
     removeFromCart(

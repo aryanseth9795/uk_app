@@ -23,6 +23,8 @@ type Product = {
   price: number | null;
   mrp: number | null;
   image: string;
+  /** Lowest orderable quantity; > 1 for bulk-only pricing. */
+  minQty?: number;
 };
 
 type CategorySectionProps = {
@@ -31,7 +33,12 @@ type CategorySectionProps = {
   products: Product[];
   onPressMore: (categoryId: string, categoryName: string) => void;
   onPressProduct: (id: string) => void;
-  onAddToCart: (id: string, variantId: string, productName?: string) => void;
+  onAddToCart: (
+    id: string,
+    variantId: string,
+    productName?: string,
+    minQty?: number,
+  ) => void;
 };
 
 function CategorySection({
@@ -81,7 +88,12 @@ function CategorySection({
               data={product}
               onPress={() => onPressProduct(product.id)}
               onAdd={() =>
-                onAddToCart(product.id, product.variantId, product.title)
+                onAddToCart(
+                  product.id,
+                  product.variantId,
+                  product.title,
+                  product.minQty,
+                )
               }
             />
           </View>

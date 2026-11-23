@@ -11,6 +11,11 @@ type Props = {
   mrp: number | null;
   image: string;
   variantCount?: number;
+  /**
+   * Lowest orderable quantity. Above 1 for bulk-only pricing, where `price` is
+   * the per-unit price at this quantity and nothing is sold below it.
+   */
+  minQty?: number;
 };
 
 const asINR = (v: number) =>
@@ -83,6 +88,9 @@ export default function ProductCard({
             </>
           )}
         </View>
+        {hasPrice && data.minQty !== undefined && data.minQty > 1 && (
+          <Text style={styles.minQty}>Min. order: {data.minQty}</Text>
+        )}
 
         {/* Add Button */}
         <Pressable
@@ -200,6 +208,11 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: "700",
     color: "#fff",
+  },
+  minQty: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#8366CC",
   },
   addBtn: {
     flexDirection: "row",

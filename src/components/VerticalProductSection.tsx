@@ -10,7 +10,7 @@ import {
 import { FlashList } from "@shopify/flash-list";
 import ProductCard from "./ProductCard";
 import type { Product } from "@api/types";
-import { getPriceForQuantity } from "@utils/pricing";
+import { getStartingPrice } from "@utils/pricing";
 
 type ProductItem = {
   id: string;
@@ -21,6 +21,8 @@ type ProductItem = {
   mrp: number | null;
   image: string;
   variantCount: number;
+  /** Lowest orderable quantity; > 1 for bulk-only pricing. */
+  minQty: number;
 };
 
 type Props = {
@@ -35,13 +37,14 @@ type Props = {
     productId: string,
     variantId: string,
     productName?: string,
+    minQty?: number,
   ) => void;
 };
 
 // Transform API product to card format
 const transformProduct = (product: Product): ProductItem => {
   const firstVariant = product.variants?.[0];
-  const price = getPriceForQuantity(firstVariant?.sellingPrices || [], 1);
+  const { price, minQty } = getStartingPrice(firstVariant?.sellingPrices || []);
   const mrp = firstVariant?.mrp || price;
 
   return {
@@ -52,6 +55,7 @@ const transformProduct = (product: Product): ProductItem => {
     mrp: mrp,
     image: String(product.thumbnail?.secureUrl || product.thumbnail?.url || ""),
     variantCount: product.variants?.length || 0,
+    minQty,
   };
 };
 
@@ -80,7 +84,9 @@ export default function VerticalProductSection({
           <ProductCard
             data={item}
             onPress={() => onProductPress(item.id)}
-            onAdd={() => onAddToCart(item.id, item.variantId, item.title)}
+            onAdd={() =>
+              onAddToCart(item.id, item.variantId, item.title, item.minQty)
+            }
           />
         </View>
       );

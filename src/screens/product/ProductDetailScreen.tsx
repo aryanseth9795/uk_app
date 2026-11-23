@@ -23,7 +23,12 @@ import {
 } from "@api/hooks/useProducts";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { addToCart } from "@store/slices/cartSlice";
-import { calculateItemTotal, formatINR } from "@utils/pricing";
+import {
+  calculateItemTotal,
+  formatINR,
+  getMinOrderQty,
+  getStartingPrice,
+} from "@utils/pricing";
 import type { ProductVariant, CategoryMixedProductsResponse } from "@api/types";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCartToast } from "@context/CartToastContext";
@@ -108,6 +113,12 @@ export default function ProductDetailScreen() {
     setSelectedImageIndex(0);
   };
 
+  // Bulk-only variants start above 1: show and add the minimum, the only
+  // quantity the backend will price.
+  const minQty = selectedVariant
+    ? getMinOrderQty(selectedVariant.sellingPrices)
+    : 1;
+
   // Handlers
   const handleAddToCart = () => {
     if (!selectedVariant || !product) return;
@@ -116,7 +127,7 @@ export default function ProductDetailScreen() {
       addToCart({
         id: productId,
         variantId: selectedVariant._id,
-        qty: 1,
+        minQty,
       }),
     );
     showCartToast(product.name);
@@ -130,7 +141,7 @@ export default function ProductDetailScreen() {
       addToCart({
         id: productId,
         variantId: selectedVariant._id,
-        qty: 1,
+        minQty,
       }),
     );
 
@@ -138,14 +149,11 @@ export default function ProductDetailScreen() {
     navigation.navigate("Checkout");
   };
 
-  // Calculate price (always for qty 1)
+  // Price at the minimum order quantity (1 unless the variant is bulk-only)
   const priceInfo = useMemo(() => {
     if (!selectedVariant) return null;
-    return calculateItemTotal(
-      selectedVariant.sellingPrices,
-      1,
-    );
-  }, [selectedVariant]);
+    return calculateItemTotal(selectedVariant.sellingPrices, minQty);
+  }, [selectedVariant, minQty]);
 
   // Variant images
   const variantImages = useMemo(() => {
@@ -298,6 +306,12 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
+          {minQty > 1 && priceInfo?.total != null && (
+            <Text style={styles.minOrderText}>
+              Minimum order: {minQty} · ₹{priceInfo.total.toFixed(0)} total
+            </Text>
+          )}
+
           {/* Pricing Tiers Info - Below Price */}
           {selectedVariant && selectedVariant.sellingPrices.length > 1 && (
             <View style={styles.pricingTiersContainer}>
@@ -395,12 +409,11 @@ export default function ProductDetailScreen() {
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => {
                   const firstVariant = item.variants?.[0];
-                  const price =
-                    firstVariant?.sellingPrices?.[0]?.price ||
-                    firstVariant?.mrp ||
-                    0;
-                  const mrp = firstVariant?.mrp || price;
-                  const hasDiscount = mrp > price;
+                  const { price, minQty: itemMinQty } = getStartingPrice(
+                    firstVariant?.sellingPrices || [],
+                  );
+                  const mrp = firstVariant?.mrp || 0;
+                  const hasDiscount = price !== null && mrp > price;
 
                   return (
                     <View style={styles.similarCard}>
@@ -422,7 +435,7 @@ export default function ProductDetailScreen() {
                         {hasDiscount && (
                           <View style={styles.similarDiscountBadge}>
                             <Text style={styles.similarDiscountText}>
-                              {Math.round(((mrp - price) / mrp) * 100)}% OFF
+                              {Math.round(((mrp - price!) / mrp) * 100)}% OFF
                             </Text>
                           </View>
                         )}
@@ -436,7 +449,9 @@ export default function ProductDetailScreen() {
                         </Text>
                         <View style={styles.similarPriceRow}>
                           <Text style={styles.similarPrice}>
-                            ₹{price.toFixed(0)}
+                            {price === null
+                              ? "Price unavailable"
+                              : `₹${price.toFixed(0)}`}
                           </Text>
                           {hasDiscount && (
                             <Text style={styles.similarMrp}>
@@ -450,7 +465,7 @@ export default function ProductDetailScreen() {
                               addToCart({
                                 id: item._id,
                                 variantId: firstVariant?._id,
-                                qty: 1,
+                                minQty: itemMinQty,
                               }),
                             );
                             showCartToast(item.name);
@@ -490,8 +505,10 @@ export default function ProductDetailScreen() {
           onProductPress={(id) =>
             navigation.push("ProductDetail", { productId: id })
           }
-          onAddToCart={(productId, variantId, productName) => {
-            dispatch(addToCart({ id: productId, variantId, qty: 1 }));
+          onAddToCart={(productId, variantId, productName, itemMinQty) => {
+            dispatch(
+              addToCart({ id: productId, variantId, minQty: itemMinQty }),
+            );
             if (productName) showCartToast(productName);
           }}
         />
@@ -677,6 +694,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#1F2937",
+  },
+  minOrderText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#8366CC",
   },
   priceContainer: {
     flexDirection: "row",
